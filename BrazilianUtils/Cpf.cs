@@ -13,74 +13,66 @@ namespace BrazilianUtils
             if (!isRequired && string.IsNullOrEmpty(sourceCPF))
                 return true;
 
-            string clearCPF;
-            clearCPF = sourceCPF.Trim();
-            clearCPF = clearCPF.Replace("-", "");
-            clearCPF = clearCPF.Replace(".", "");
+            var posicao = 0;
+            var totalDigito1 = 0;
+            var totalDigito2 = 0;
+            var digitoVerificador1 = 0;
+            var digitoVerificador2 = 0;
 
-            if (clearCPF.Length != 11)
-                return false;
+            bool digitosIdenticos = true;
+            var ultimoDigito = -1;
 
-            int[] cpfArray;
-            int totalDigitoI = 0;
-            int totalDigitoII = 0;
-            int modI;
-            int modII;
-            var blacklist = new List<string>() {
-
-            };
-            if (clearCPF.Equals("00000000000") ||
-                clearCPF.Equals("11111111111") ||
-                clearCPF.Equals("22222222222") ||
-                clearCPF.Equals("33333333333") ||
-                clearCPF.Equals("44444444444") ||
-                clearCPF.Equals("55555555555") ||
-                clearCPF.Equals("66666666666") ||
-                clearCPF.Equals("77777777777") ||
-                clearCPF.Equals("88888888888") ||
-                clearCPF.Equals("99999999999"))
+            foreach (var c in sourceCPF)
             {
-                return false;
-            }
-
-            foreach (char c in clearCPF)
-            {
-                if (!char.IsNumber(c))
+                if (char.IsDigit(c))
                 {
-                    return false;
+                    var digito = c - '0';
+                    if (posicao != 0 && ultimoDigito != digito)
+                    {
+                        digitosIdenticos = false;
+                    }
+
+                    ultimoDigito = digito;
+                    if (posicao < 9)
+                    {
+                        totalDigito1 += digito * (10 - posicao);
+                        totalDigito2 += digito * (11 - posicao);
+                    }
+                    else if (posicao == 9)
+                    {
+                        digitoVerificador1 = digito;
+                    }
+                    else if (posicao == 10)
+                    {
+                        digitoVerificador2 = digito;
+                    }
+
+                    posicao++;
                 }
             }
 
-            cpfArray = new int[11];
-            for (int i = 0; i < clearCPF.Length; i++)
-            {
-                cpfArray[i] = int.Parse(clearCPF[i].ToString());
-            }
-
-            for (int posicao = 0; posicao < cpfArray.Length - 2; posicao++)
-            {
-                totalDigitoI += cpfArray[posicao] * (10 - posicao);
-                totalDigitoII += cpfArray[posicao] * (11 - posicao);
-            }
-
-            modI = totalDigitoI % 11;
-            if (modI < 2) { modI = 0; }
-            else { modI = 11 - modI; }
-
-            if (cpfArray[9] != modI)
-            {
+            if (posicao > 11)
                 return false;
-            }
 
-            totalDigitoII += modI * 2;
-
-            modII = totalDigitoII % 11;
-            if (modII < 2) { modII = 0; }
-            else { modII = 11 - modII; }
-            if (cpfArray[10] != modII)
-            {
+            if (digitosIdenticos)
                 return false;
-            }
+
+            var digito1 = totalDigito1 % 11;
+            digito1 = digito1 < 2
+                ? 0
+                : 11 - digito1;
+
+            if (digitoVerificador1 != digito1)
+                return false;
+
+            totalDigito2 += digito1 * 2;
+            var digito2 = totalDigito2 % 11;
+            digito2 = digito2 < 2
+                ? 0
+                : 11 - digito2;
+
+            if (digitoVerificador2 != digito2)
+                return false;
 
             return true;
         }
