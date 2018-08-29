@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace BrazilianUtils
 {
     public static class Cpf
     {
-        public static bool IsValid(string sourceCPF, bool isRequired = true) {
+        public static bool IsValid(string sourceCPF, bool isRequired = true)
+        {
 
             if (isRequired && string.IsNullOrEmpty(sourceCPF))
                 return false;
@@ -75,6 +78,15 @@ namespace BrazilianUtils
                 return false;
 
             return true;
+        }
+
+        public static string Format(string sourceCpf)
+        {
+            var clearCpf = Helpers.OnlyNumbers(sourceCpf);
+            var sb = new StringBuilder(clearCpf);
+            sb.Insert(3, ".").Insert(7, ".").Insert(11, "-");
+
+            return sb.ToString();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace BrazilianUtils.Tests
@@ -35,6 +36,14 @@ namespace BrazilianUtils.Tests
         public void ShouldBeValidWhenEmptyAndNotRequired(string cpfValue)
         {
             Assert.True(Cpf.IsValid(cpfValue, isRequired: false));
+        }
+
+        [Theory]
+        [InlineData("02115402006")]
+        [InlineData("021.154.020-06")]
+        public void ShouldFormattedStringMatchRegex(string cpfValue)
+        {
+            Assert.Matches(@"^(\d{3}\.){2}\d{3}-\d{2}$", Cpf.Format(cpfValue));
         }
     }
 }
