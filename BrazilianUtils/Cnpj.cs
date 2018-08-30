@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace BrazilianUtils
 {
     public static class Cnpj
@@ -76,6 +78,15 @@ namespace BrazilianUtils
                 return false;
 
             return true;
+        }
+
+        public static string Format(string input)
+        {
+            var clearText = Helpers.OnlyNumbers(input);
+            var sb = new StringBuilder(clearText);
+            sb.Insert(2, ".").Insert(6, ".").Insert(10, "/").Insert(15, "-");
+
+            return sb.ToString();
         }
     }
 }

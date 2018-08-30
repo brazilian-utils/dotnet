@@ -37,5 +37,13 @@ namespace BrazilianUtils.Tests
         {
             Assert.True(Cnpj.IsValid(value, isRequired: false));
         }
+
+        [Theory]
+        [InlineData("22938962000129")]
+        [InlineData("42.999.072/0001-34")]
+        public void ShouldFormattedStringMatchRegex(string value)
+        {
+            Assert.Matches(@"^[0-9]{2}(\.[0-9]{3}){2}\/[0-9]{4}\-[0-9]{2}$", Cnpj.Format(value));
+        }
     }
 }
