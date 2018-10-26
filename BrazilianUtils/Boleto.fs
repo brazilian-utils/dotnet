@@ -2,11 +2,6 @@ module BrazilianUtils.Boleto
 
 open Helpers
 
-let private digitRule digit =
-    match digit with
-    | 0 | 1 -> 1
-    | _ -> 11 - digit
-
 type private PartialPosition(startPos: int, endPos: int, checkDigitPos: int) =
     member this.StartPos = startPos
     member this.EndPos = endPos
@@ -16,11 +11,11 @@ type private Partial(value: int list, checkDigit: int) =
     member this.Value = value
     member this.CheckDigit = checkDigit
 
-let private partialPositions = [
-    new PartialPosition(0,8,9);
-    new PartialPosition(10,19,20);
-    new PartialPosition(21,30,31);
-]
+let private partialPositions =
+    [ new PartialPosition(0, 8, 9)
+      new PartialPosition(10, 19, 20)
+      new PartialPosition(21, 30, 31) ]
+
 
 let private calculatePartialDigit (value : int list) =
     let weights = [ 2; 1 ]
@@ -86,7 +81,9 @@ let private validateDigitableLine dl  =
 //  Visible members
 let IsValid value =
     let clearValue = stringToIntList value
+    let digitableLineLength = 47
+    let boletoLength = 44
     match clearValue.Length with
-    | 47 -> clearValue |> validateDigitableLine
-    | 44 -> clearValue |> validateBoleto
+    | x when x = digitableLineLength -> clearValue |> validateDigitableLine
+    | x when x = boletoLength -> clearValue |> validateBoleto
     | _ -> false
