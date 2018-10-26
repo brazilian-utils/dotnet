@@ -15,8 +15,11 @@ namespace BrazilianUtilsService.Tests.mail.src
         [Theory]
         [InlineData("john.doe.teste.com.br")]
         [InlineData("jóhn.doe@yahoo.com.br")]
-        [InlineData("jóhn doe@yahoo.com.br")]
-        [InlineData("jóhn&doe@yahoo.com.br")]
+        [InlineData("john doe@yahoo.com.br")]
+        [InlineData("john&doe@yahoo.com.br")]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData(null)]
         public void shouldReturnFalse(string value)
         {
             var result = _validateEmail.IsValidEmail(value);

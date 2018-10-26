@@ -10,6 +10,9 @@ namespace BrazilianUtilsService.email.src
 
         public bool IsValidEmail(string email)
         {
+            if(string.IsNullOrWhiteSpace(email))
+                return false;
+
             return IsEmailContentValid(email);
         }
     }
