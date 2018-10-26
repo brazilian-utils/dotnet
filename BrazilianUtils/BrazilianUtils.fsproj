@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Helpers.fs" />
+    <Compile Include="Boleto.fs" />
+    <Compile Include="Cpf.fs" />
+    <Compile Include="Cnpj.fs" />
+  </ItemGroup>
+
+</Project>
