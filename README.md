@@ -29,6 +29,7 @@ Cpf.IsValid(null); // false
 
 Cpf.Format("52945557789"); // 529.455.577-89
 
+Cpf.Generate(); // 38041016588
 ```
 ### CNPJ
 ```csharp
@@ -39,6 +40,8 @@ Cnpj.IsValid(""); // false
 Cnpj.IsValid(null); // false
 
 Cnpj.Format("11886541000185"); // 11.886.541.0001-85
+
+Cnpj.Generate(); // 13401551551768
 ```
 ### Boleto
 ```csharp
