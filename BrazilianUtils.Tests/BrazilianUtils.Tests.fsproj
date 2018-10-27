@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="BoletoTest.fs" />
+    <Compile Include="CnpjTest.fs" />
+    <Compile Include="CpfTest.fs" />
+    <Compile Include="HelpersTest.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
@@ -14,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BrazilianUtils\BrazilianUtils.csproj" />
+    <ProjectReference Include="..\BrazilianUtils\BrazilianUtils.fsproj" />
   </ItemGroup>
 
 </Project>

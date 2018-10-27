@@ -27,11 +27,9 @@ Cpf.IsValid("invalid-cpf"); // false
 Cpf.IsValid(""); // false
 Cpf.IsValid(null); // false
 
-Cpf.IsValid("", isRequired: false); // true
-Cpf.IsValid(null, isRequired: false); // true
-
 Cpf.Format("52945557789"); // 529.455.577-89
 
+Cpf.Generate(); // 38041016588
 ```
 ### CNPJ
 ```csharp
@@ -41,11 +39,15 @@ Cnpj.IsValid("invalid-cnpj"); // false
 Cnpj.IsValid(""); // false
 Cnpj.IsValid(null); // false
 
-Cnpj.IsValid("", isRequired: false); // true
-Cnpj.IsValid(null, isRequired: false); // true
-
 Cnpj.Format("11886541000185"); // 11.886.541.0001-85
+
+Cnpj.Generate(); // 13401551551768
 ```
+### Boleto
+```csharp
+Boleto.IsValid("00198.10001 00030.212237 00217.236553 1 35742800321323"); // true
+```
+
 ### Utils
 ```csharp
 Helpers.OnlyNumbers("123abc"); // 123
