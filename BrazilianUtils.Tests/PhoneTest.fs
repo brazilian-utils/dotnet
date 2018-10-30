@@ -16,6 +16,7 @@ let shouldBeValid phone =
 [<Theory>]
 [<InlineData("(00) 3 0000-0000")>]
 [<InlineData("(11) 9000-0000")>]
+[<InlineData("(20) 9000-0000")>]
 [<InlineData("(11) 3 0000-0000")>]
 [<InlineData("(11) 9000-0000")>]
 [<InlineData("11")>]
