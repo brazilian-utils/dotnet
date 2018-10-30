@@ -1,14 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <VersionPrefix>2.0.0</VersionPrefix>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Helpers.fs" />
-    <Compile Include="Boleto.fs" />
-    <Compile Include="Cpf.fs" />
-    <Compile Include="Cnpj.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Helpers.fs" />
+        <Compile Include="Boleto.fs" />
+        <Compile Include="Cpf.fs" />
+        <Compile Include="Cnpj.fs" />
+        <Compile Include="Phone.fs" />
+    </ItemGroup>
 
 </Project>

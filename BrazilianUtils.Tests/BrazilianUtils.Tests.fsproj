@@ -11,6 +11,7 @@
     <Compile Include="CnpjTest.fs" />
     <Compile Include="CpfTest.fs" />
     <Compile Include="HelpersTest.fs" />
+    <Compile Include="PhoneTest.fs" />
   </ItemGroup>
 
   <ItemGroup>
