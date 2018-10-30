@@ -47,6 +47,11 @@ Cnpj.Generate(); // 13401551551768
 ```csharp
 Boleto.IsValid("00198.10001 00030.212237 00217.236553 1 35742800321323"); // true
 ```
+### Phone
+```csharp
+Phone.IsValid("(51) 99922-3344"); // true
+Phone.IsValid("51999223344"); // true
+```
 
 ### Utils
 ```csharp
