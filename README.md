@@ -56,6 +56,8 @@ Phone.IsValid("51999223344"); // true
 ```csharp
 Cep.IsValid("92990000"); // true
 Cep.IsValid("92990-000"); // true
+
+Cep.Format("92990000"); // 92990-000
 ```
 ### Utils
 ```csharp
