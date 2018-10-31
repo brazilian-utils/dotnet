@@ -11,6 +11,7 @@
         <Compile Include="Cpf.fs" />
         <Compile Include="Cnpj.fs" />
         <Compile Include="Phone.fs" />
+        <Compile Include="Cep.fs" />
     </ItemGroup>
 
 </Project>

@@ -52,7 +52,11 @@ Boleto.IsValid("00198.10001 00030.212237 00217.236553 1 35742800321323"); // tru
 Phone.IsValid("(51) 99922-3344"); // true
 Phone.IsValid("51999223344"); // true
 ```
-
+### Cep
+```csharp
+Cep.IsValid("92990000"); // true
+Cep.IsValid("92990-000"); // true
+```
 ### Utils
 ```csharp
 Helpers.OnlyNumbers("123abc"); // 123
