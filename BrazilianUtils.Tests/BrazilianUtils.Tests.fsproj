@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Include="BoletoTest.fs" />
+    <Compile Include="CepTest.fs" />
     <Compile Include="CnpjTest.fs" />
     <Compile Include="CpfTest.fs" />
     <Compile Include="HelpersTest.fs" />
