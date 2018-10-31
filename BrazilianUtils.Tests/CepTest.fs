@@ -21,3 +21,9 @@ let shouldBeInvalid cep =
     cep
     |> Cep.IsValid
     |> Assert.False
+
+[<Theory>]
+[<InlineData"92990000">]
+[<InlineData"92990-000">]
+let shouldFormattedStringMatchRegex cep =
+    Assert.Matches(@"^\d{5}-\d{3}$", Cep.Format cep)
