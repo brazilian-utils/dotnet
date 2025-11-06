@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>BrazilianUtils</id>
+        <version>2.1.0</version>
+        <description>Biblioteca de utilitários projetada para validar, gerar e manipular dados de acordo com as particularidades do Brasil. Utils library for specific Brazilian businesses.</description>
+        <authors>Rodinei Fagundes, Hyan Mandian, Leonel Sanches da Silva</authors>
+        <license type="expression">MIT</license>
+        <readme>README.md</readme>
+        <projectUrl>https://github.com/brazilian-utils/brazilian-utils-dotnet</projectUrl>
+        <repository type="git" url="https://github.com/brazilian-utils/brazilian-utils-dotnet.git" />
+        <tags>Brazil Brazilian CPF CNPJ CEP Phone Validation</tags>
+        <copyright>Copyright © 2023-present Brazilian Utils Contributors</copyright>
+        <releaseNotes>Updating .NET version.</releaseNotes>
+    </metadata>
+    <files>
+        <file src="..\README.md" target="\" />
+    </files>
+</package>

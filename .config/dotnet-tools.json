@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "dotnet-releaser": {
+      "version": "0.13.1",
+      "commands": [
+        "dotnet-releaser"
+      ],
+      "rollForward": false
+    }
+  }
+}
