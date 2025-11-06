@@ -1,8 +1,0 @@
-language: csharp
-solution: BrazilianUtils.sln
-mono: none
-dotnet: 2.1.302
-script:
-  - dotnet restore
-  - dotnet build
-  - dotnet test BrazilianUtils.Tests
