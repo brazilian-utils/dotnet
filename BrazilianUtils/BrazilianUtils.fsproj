@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="VoterId.fs" />
         <Compile Include="Renavam.fs" />
         <Compile Include="Pis.fs" />
         <Compile Include="LicensePlate.fs" />
