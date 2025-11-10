@@ -237,7 +237,9 @@ let isValid (legalProcessId: string) : bool =
         if cleanId.Length <> 20 || not (cleanId |> Seq.forall Char.IsDigit) then
             false
         else
+            let nnnnnnn = cleanId.Substring(0, 7)
             let dd = cleanId.Substring(7, 2)
+            let aaaa = cleanId.Substring(9, 4)
             let j = cleanId.Substring(13, 1)
             let tr = cleanId.Substring(14, 2)
             let oooo = cleanId.Substring(16, 4)
@@ -249,7 +251,8 @@ let isValid (legalProcessId: string) : bool =
                 let validForo = processData.id_foro |> Array.contains (int oooo)
                 let validProcess = validTribunal && validForo
                 
-                let baseNum = cleanId.Substring(0, 7) + cleanId.Substring(9)
+                // Concatenate: NNNNNNN + AAAA + J + TT + OOOO (13 digits, excluding DD)
+                let baseNum = nnnnnnn + aaaa + j + tr + oooo
                 let calculatedChecksum = checksum (int64 baseNum)
                 
                 calculatedChecksum = dd && validProcess
@@ -287,11 +290,15 @@ let generate (year: int option) (orgao: int option) : string option =
                 let oooo = processData.id_foro.[foroIndex].ToString().PadLeft(4, '0')
                 
                 let nnnnnnn = random.Next(0, 10000000).ToString().PadLeft(7, '0')
+                let aaaa = selectedYear.ToString()
+                let j = selectedOrgao.ToString()
                 
-                let baseNum = $"{nnnnnnn}{selectedYear}{selectedOrgao}{tr}{oooo}"
+                // Concatenate: NNNNNNN + AAAA + J + TT + OOOO (13 digits for checksum calculation)
+                let baseNum = nnnnnnn + aaaa + j + tr + oooo
                 let dd = checksum (int64 baseNum)
                 
-                Some $"{nnnnnnn}{dd}{selectedYear}{selectedOrgao}{tr}{oooo}"
+                // Final format: NNNNNNN DD AAAA J TT OOOO
+                Some $"{nnnnnnn}{dd}{aaaa}{j}{tr}{oooo}"
     with
     | ex ->
         eprintfn "Error generating legal process: %s" ex.Message

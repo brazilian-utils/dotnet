@@ -3,31 +3,34 @@ module BrazilianUtils.Currency
 open System
 open System.Globalization
 
-/// Format a numeric value as Brazilian currency (R$).
-///
-/// Examples:
-///     formatCurrency 1234.56M = Some "R$ 1.234,56"
-///     formatCurrency 0M = Some "R$ 0,00"
-///     formatCurrency -9876.54M = Some "R$ -9.876,54"
+// --- formatCurrency (replace original implementation) ---
 let formatCurrency (value: decimal) : string option =
     try
-        let formattedValue = 
-            sprintf "R$ %.2f" value
-            |> fun s -> s.Replace(",", "_")
-            |> fun s -> s.Replace(".", ",")
-            |> fun s -> s.Replace("_", ".")
-        Some formattedValue
+        // Use pt-BR numeric formatting with thousands separator and 2 decimal places
+        let culture = CultureInfo("pt-BR")
+        let formatted = value.ToString("N2", culture)       // e.g. "-123.236,70" or "123.236,70"
+        // Ensure the exact layout "R$ 123.236,70" or "R$ -123.236,70" (space after R$)
+        let result =
+            if formatted.StartsWith "-" then
+                // remove leading '-' and prefix with "R$ -"
+                let withoutSign = formatted.Substring(1)
+                sprintf "R$ -%s" withoutSign
+            else
+                sprintf "R$ %s" formatted
+        Some result
     with
     | :? FormatException
     | :? OverflowException -> None
 
+
 /// Convert a number to its textual representation in Brazilian Portuguese
+// --- numberToPortuguese (replace scale arrays and adjust thousands rule) ---
 let private numberToPortuguese (n: int64) : string =
     let units = [| ""; "um"; "dois"; "três"; "quatro"; "cinco"; "seis"; "sete"; "oito"; "nove" |]
     let teens = [| "dez"; "onze"; "doze"; "treze"; "quatorze"; "quinze"; "dezesseis"; "dezessete"; "dezoito"; "dezenove" |]
     let tens = [| ""; ""; "vinte"; "trinta"; "quarenta"; "cinquenta"; "sessenta"; "setenta"; "oitenta"; "noventa" |]
     let hundreds = [| ""; "cento"; "duzentos"; "trezentos"; "quatrocentos"; "quinhentos"; "seiscentos"; "setecentos"; "oitocentos"; "novecentos" |]
-    
+
     let rec convertBelow1000 (n: int) : string =
         if n = 0 then ""
         elif n = 100 then "cem"
@@ -43,48 +46,55 @@ let private numberToPortuguese (n: int64) : string =
             let rest = n % 100
             if rest = 0 then hundreds.[hundred]
             else sprintf "%s e %s" hundreds.[hundred] (convertBelow1000 rest)
-    
+
     let rec convert (n: int64) (scale: int) : string =
         if n = 0L then ""
         else
-            let scaleNames = [| ""; "mil"; "milhão"; "bilhão"; "trilhão" |]
-            let scalePlurals = [| ""; "mil"; "milhões"; "bilhões"; "trilhões" |]
+            // extended to include quatrilhão / quatrilhões at index 5
+            let scaleNames = [| ""; "mil"; "milhão"; "bilhão"; "trilhão"; "quatrilhão" |]
+            let scalePlurals = [| ""; "mil"; "milhões"; "bilhões"; "trilhões"; "quatrilhões" |]
             let divisor = pown 1000L scale
             let quotient = n / divisor
             let remainder = n % divisor
-            
+
             if quotient = 0L then convert n (scale - 1)
             else
                 let currentPart = int (quotient % 1000L)
                 let higherParts = quotient / 1000L
-                
-                let partText = convertBelow1000 currentPart
-                let scaleName = 
+
+                // Special rule: for thousands group (scale = 1) and currentPart = 1,
+                // Portuguese uses "mil" (not "um mil")
+                let partText =
+                    if scale = 1 && currentPart = 1 then "" // omit "um", scale name will be " mil"
+                    else if currentPart = 0 then ""
+                    else convertBelow1000 currentPart
+
+                let scaleName =
                     if scale = 0 then ""
                     elif scale = 1 then " mil"
                     elif currentPart = 1 then sprintf " %s" scaleNames.[scale]
                     else sprintf " %s" scalePlurals.[scale]
-                
-                let currentText = 
-                    if String.IsNullOrEmpty partText then ""
+
+                let currentText =
+                    if String.IsNullOrEmpty partText then scaleName.TrimStart() |> fun s -> if String.IsNullOrEmpty s then "" else s
                     else partText + scaleName
-                
+
                 let remainderText = convert remainder (scale - 1)
-                
-                let higherText = 
+
+                let higherText =
                     if higherParts > 0L then convert (higherParts * 1000L) scale
                     else ""
-                
-                let connector = 
+
+                let connector =
                     if not (String.IsNullOrEmpty remainderText) && remainder < 100L && remainder > 0L then " e "
                     elif not (String.IsNullOrEmpty remainderText) then ", "
                     else ""
-                
+
                 if String.IsNullOrEmpty higherText then
-                    currentText + connector + remainderText
+                    (if String.IsNullOrEmpty currentText then remainderText else currentText + connector + remainderText)
                 else
                     higherText + ", " + currentText + connector + remainderText
-    
+
     if n = 0L then "zero"
     else
         // Determine maximum scale
@@ -93,7 +103,7 @@ let private numberToPortuguese (n: int64) : string =
         while temp >= 1000L do
             temp <- temp / 1000L
             maxScale <- maxScale + 1
-        
+
         convert n maxScale
 
 /// Convert a monetary value in Brazilian Reais to textual representation.

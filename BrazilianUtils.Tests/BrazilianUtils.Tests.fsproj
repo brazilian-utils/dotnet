@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="LicensePlateTests.fs" />
+    <Compile Include="LegalProcessTests.fs" />
+    <Compile Include="CurrencyTests.fs" />
     <Compile Include="PisTests.fs" />
     <Compile Include="RenavamTests.fs" />
     <Compile Include="VoterIdTests.fs" />
