@@ -336,3 +336,6 @@ ASALocalRun/
 
 # macOS
 .DS_Store
+
+# dotnet-releaser
+artifacts-dotnet-releaser/
