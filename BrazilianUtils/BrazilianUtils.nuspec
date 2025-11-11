@@ -11,17 +11,6 @@
         <repository type="git" url="https://github.com/brazilian-utils/brazilian-utils-dotnet.git" />
         <tags>Brazil Brazilian CPF CNPJ CEP Phone Validation</tags>
         <copyright>Copyright © 2023-present Brazilian Utils Contributors</copyright>
-        <releaseNotes>
-            Adding new validators: 
-    
-            - CNH
-            - Moeda (Currency)
-            - Processos Legais (Legal Process)
-            - Placas de Carros (License Plates)
-            - PIS
-            - Renavam
-            - Título de Eleitor (Voter Id)
-        </releaseNotes>
     </metadata>
     <files>
         <file src="..\README.md" target="\" />
