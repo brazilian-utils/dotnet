@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.CepTest
+module BrazilianUtils.Tests.CepTests
 
 open BrazilianUtils
 open Xunit

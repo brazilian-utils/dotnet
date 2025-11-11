@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.PhoneTest
+module BrazilianUtils.Tests.PhoneTests
 
 open BrazilianUtils
 open Xunit

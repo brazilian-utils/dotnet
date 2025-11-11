@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.CpfTest
+module BrazilianUtils.Tests.CpfTests
 
 open Xunit
 open BrazilianUtils

@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.HelpersTest
+module BrazilianUtils.Tests.HelpersTests
 
 open BrazilianUtils
 open Xunit

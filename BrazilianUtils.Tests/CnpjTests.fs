@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.CnpjTest
+module BrazilianUtils.Tests.CnpjTests
 
 open BrazilianUtils
 open Xunit

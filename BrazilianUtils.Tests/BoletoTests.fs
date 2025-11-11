@@ -1,4 +1,4 @@
-module BrazilianUtils.Tests.BoletoTest
+module BrazilianUtils.Tests.BoletoTests
 
 open BrazilianUtils
 open Xunit

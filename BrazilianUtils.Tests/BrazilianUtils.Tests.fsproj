@@ -7,12 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="BoletoTest.fs" />
-    <Compile Include="CepTest.fs" />
-    <Compile Include="CnpjTest.fs" />
-    <Compile Include="CpfTest.fs" />
-    <Compile Include="HelpersTest.fs" />
-    <Compile Include="PhoneTest.fs" />
+    <Compile Include="CnhTests.fs" />
+    <Compile Include="LicensePlateTests.fs" />
+    <Compile Include="LegalProcessTests.fs" />
+    <Compile Include="CurrencyTests.fs" />
+    <Compile Include="PisTests.fs" />
+    <Compile Include="RenavamTests.fs" />
+    <Compile Include="VoterIdTests.fs" />
+    <Compile Include="BoletoTests.fs" />
+    <Compile Include="CepTests.fs" />
+    <Compile Include="CnpjTests.fs" />
+    <Compile Include="CpfTests.fs" />
+    <Compile Include="HelpersTests.fs" />
+    <Compile Include="PhoneTests.fs" />
   </ItemGroup>
 
   <ItemGroup>
