@@ -339,3 +339,4 @@ ASALocalRun/
 
 # dotnet-releaser
 artifacts-dotnet-releaser/
+/.claude
