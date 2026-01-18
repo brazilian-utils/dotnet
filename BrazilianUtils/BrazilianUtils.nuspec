@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>BrazilianUtils</id>
-        <version>2.2.0</version>
+        <version>2.3.0</version>
         <description>Biblioteca de utilitários projetada para validar, gerar e manipular dados de acordo com as particularidades do Brasil. Utils library for specific Brazilian businesses.</description>
         <authors>Rodinei Fagundes, Hyan Mandian, Leonel Sanches da Silva</authors>
         <license type="expression">MIT</license>

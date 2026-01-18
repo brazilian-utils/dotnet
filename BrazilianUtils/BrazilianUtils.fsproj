@@ -2,9 +2,10 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <VersionPrefix>2.2.0</VersionPrefix>
+        <VersionPrefix>2.3.0</VersionPrefix>
         <NuspecFile>BrazilianUtils.nuspec</NuspecFile>
         <PackageReleaseNotes>https://github.com/brazilian-utils/dotnet/blob/master/CHANGELOG.md</PackageReleaseNotes>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
