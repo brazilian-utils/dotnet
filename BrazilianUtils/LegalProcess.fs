@@ -218,7 +218,10 @@ let formatLegalProcess (legalProcessId: string) : string option =
 ///     checksum 1234567L = "50"
 ///     checksum 9876543L = "88"
 let private checksum (basenum: int64) : string =
-    let result = 97L - ((basenum * 100L) % 97L)
+    // Apply modulo before multiplying by 100 to avoid int64 overflow
+    // (a * b) % m = ((a % m) * (b % m)) % m
+    let remainder = (basenum % 97L) * 100L % 97L
+    let result = 98L - remainder
     result.ToString().PadLeft(2, '0')
 
 /// Check if a legal process ID is valid.

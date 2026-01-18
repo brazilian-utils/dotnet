@@ -57,28 +57,37 @@ let ``formatLegalProcess should return None for non-numeric string`` () =
 // --- isValid Tests ---
 
 [<Theory>]
- // [<InlineData("68476506020233030000", true)>]
-// [<InlineData("51808233620233030000", true)>]
-// The following two examples for orgao5 are known to be rejected by current
-// validation logic in some implementations; relax expectation to false so tests
-// remain stable until validations are aligned.
-[<InlineData("00000018520215050000", false)>]
-[<InlineData("00000018520215059999", false)>]
-// [<InlineData("00000018020211010000", true)>]
+// Valid legal process IDs (correct check digits using 98 - (base*100 % 97) formula)
+[<InlineData("68476506120233030000", true)>]  // orgao 3, tribunal 03, foro 0000
+[<InlineData("00000018720215050000", true)>]  // orgao 5, tribunal 05, foro 0000
+[<InlineData("00000013420211010000", true)>]  // orgao 1, tribunal 01, foro 0000 (DD=34)
+[<InlineData("00018812520168020000", true)>]  // orgao 8, tribunal 02, foro 0000 (DD=25)
+// Invalid: wrong length
 [<InlineData("123", false)>]
 [<InlineData("123456789012345678901", false)>]
+// Invalid: non-numeric characters
 [<InlineData("abcdefghijklmnopqrst", false)>]
-[<InlineData("68476506120233030000", false)>]
+// Invalid: wrong check digit (DD off by 1)
+[<InlineData("68476506020233030000", false)>]
+// Invalid: wrong segment (J) does not exist
 [<InlineData("68476506020230030000", false)>]
+// Invalid: tribunal not valid for orgao
 [<InlineData("68476506020233990000", false)>]
+// Invalid: foro not valid for orgao
 [<InlineData("68476506020233039999", false)>]
+// Invalid: tribunal 99 not valid for orgao 1
 [<InlineData("00000018020211990000", false)>]
+// Invalid: foro 9999 not valid for orgao 1
 [<InlineData("00000018020211019999", false)>]
+// Invalid: wrong check digit for orgao 5
+[<InlineData("00000018520215050000", false)>]
+// Invalid: tribunal 99 not valid for orgao 5
 [<InlineData("00000018520215990000", false)>]
+// Invalid: wrong check digit
 [<InlineData("00000018520215059998", false)>]
-// [<InlineData("00018817720168020000", true)>]
-// [<InlineData("00018817720168029999", true)>]
+// Invalid: tribunal 99 not valid for orgao 8
 [<InlineData("00018817720168990000", false)>]
+// Invalid: wrong check digit
 [<InlineData("00018817720168029998", false)>]
 let ``isValid should validate various legal process numbers`` (input: string, expected: bool) =
     let actual = isValid input
@@ -86,13 +95,14 @@ let ``isValid should validate various legal process numbers`` (input: string, ex
 
 [<Fact>]
 let ``isValid should handle formatted strings`` () =
-    // This process ID is valid (68476506020233030000)
-    let input = "6847650-60.2023.3.03.0000"
+    // This process ID is valid (68476506120233030000) with correct check digit 61
+    let input = "6847650-61.2023.3.03.0000"
     // Ensure formatted input behaves the same as cleaned input
     let cleaned = removeSymbols input
     let expected = isValid cleaned
     let actual = isValid input
     Assert.Equal(expected, actual)
+    Assert.True(actual) // Both should be valid
 
 [<Fact>]
 let ``isValid should return false for exceptions`` () =
@@ -103,7 +113,7 @@ let ``isValid should return false for exceptions`` () =
 
 // --- generate Tests ---
 
-[<Fact(Skip = "Maybe remove this test")>]
+[<Fact>]
 let ``generate should return a valid legal process ID with no args`` () =
     let result = generate None None
     Assert.True(result.IsSome)
@@ -112,7 +122,7 @@ let ``generate should return a valid legal process ID with no args`` () =
     Assert.True(processId |> Seq.forall Char.IsDigit)
     Assert.True(isValid processId)
 
-[<Fact(Skip = "Maybe remove this test")>]
+[<Fact>]
 let ``generate should return a valid legal process ID for specific year and orgao`` () =
     let currentYear = DateTime.Now.Year
     let result = generate (Some currentYear) (Some 5) // Orgao5
@@ -142,22 +152,19 @@ let ``generate should return None for an invalid orgao (10)`` () =
     let result = generate None (Some 10)
     Assert.True(result.IsNone)
 
-[<Fact(Skip = "Maybe remove this test")>]
+[<Fact>]
 let ``generate should create valid IDs for all valid orgaos`` () =
     let currentYear = DateTime.Now.Year
     for orgao in 1 .. 9 do
-    // Try up to 10 attempts to generate a valid ID for the orgao to avoid
-    // flakiness from random selection of invalid combinations
-    let mutable found = false
-    let mutable attempts = 0
-    while not found && attempts < 10 do
-        attempts <- attempts + 1
-        let result = generate (Some currentYear) (Some orgao)
-        if result.IsSome then
-            let processId = result.Value
-            if isValid processId then
-                found <- true
-    Assert.True(found, $"Failed to generate a valid ID for orgao {orgao} after {attempts} attempts")
-
-    // If found, optional extra check for orgao digit
-    // (skip strict equality because some implementations may vary formatting)
+        // Try up to 10 attempts to generate a valid ID for the orgao to avoid
+        // flakiness from random selection of invalid combinations
+        let mutable found = false
+        let mutable attempts = 0
+        while not found && attempts < 10 do
+            attempts <- attempts + 1
+            let result = generate (Some currentYear) (Some orgao)
+            if result.IsSome then
+                let processId = result.Value
+                if isValid processId then
+                    found <- true
+        Assert.True(found, $"Failed to generate a valid ID for orgao {orgao} after {attempts} attempts")
