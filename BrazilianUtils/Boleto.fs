@@ -28,7 +28,7 @@ let private calculatePartialDigit (value : int list) =
     |> List.mapi accumulatorRule
     |> List.sum
     |> (fun x -> x % 10)
-    |> (fun x -> 10 - x)
+    |> (fun x -> (10 - x) % 10)
 
 let private validatePartialCheckDigit (partial: Partial) =
     partial.Value
