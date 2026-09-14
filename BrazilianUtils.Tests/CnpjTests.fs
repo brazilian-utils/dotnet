@@ -55,3 +55,20 @@ let generatedAlphanumericCnpjShouldBeValid() =
     [ 1..100 ]
     |> Seq.forall (fun _ -> Cnpj.GenerateAlphanumeric() |> Cnpj.IsValid)
     |> Assert.True
+
+[<Fact>]
+let generatedCnpjShouldEventuallyContainDigitNine() =
+    // Regressão: rnd.Next(0, 9) nunca sorteava o dígito 9.
+    [ 1..200 ]
+    |> Seq.exists (fun _ -> Cnpj.Generate() |> Seq.exists (fun c -> c = '9'))
+    |> Assert.True
+
+[<Theory>]
+[<InlineData"">]
+[<InlineData"1">]
+[<InlineData"12345">]
+[<InlineData"12345678">]
+[<InlineData"1234567890">]
+let formatShouldNotThrowOnShortInput cnpj =
+    // Regressão: Format lançava ArgumentOutOfRangeException para menos de 12 caracteres.
+    Cnpj.Format cnpj |> ignore

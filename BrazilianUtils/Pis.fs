@@ -85,7 +85,10 @@ let formatPis (pis: string) : string option =
 ///     generate() = "98765432100"
 let generate () : string =
     let random = Random()
-    let baseNumber = random.Next(0, 1000000000).ToString().PadLeft(10, '0')
+    let baseNumber =
+        List.init 10 (fun _ -> random.Next(0, 10))
+        |> List.map string
+        |> String.concat ""
     let checksumDigit = checksum baseNumber
-    
+
     baseNumber + checksumDigit.ToString()

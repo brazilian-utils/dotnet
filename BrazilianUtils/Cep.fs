@@ -12,4 +12,6 @@ let IsValid cep =
 
 let Format cep =
     let clearValue = Helpers.OnlyNumbers cep
-    StringBuilder(clearValue).Insert(5, "-").ToString()
+    let sb = StringBuilder(clearValue)
+    if sb.Length >= 5 then sb.Insert(5, "-") |> ignore
+    sb.ToString()

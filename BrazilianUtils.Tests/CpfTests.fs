@@ -38,3 +38,21 @@ let generatedCpfShouldBeValid() =
     [ 1..100 ]
     |> Seq.forall (fun _ -> Cpf.Generate() |> Cpf.IsValid)
     |> Assert.True
+
+[<Fact>]
+let generatedCpfShouldEventuallyContainDigitNine() =
+    // Regressão: rnd.Next(0, 9) nunca sorteava o dígito 9.
+    [ 1..200 ]
+    |> Seq.exists (fun _ -> Cpf.Generate() |> Seq.exists (fun c -> c = '9'))
+    |> Assert.True
+
+[<Theory>]
+[<InlineData"">]
+[<InlineData"1">]
+[<InlineData"12">]
+[<InlineData"123">]
+[<InlineData"12345">]
+[<InlineData"12345678">]
+let formatShouldNotThrowOnShortInput cpf =
+    // Regressão: Format lançava ArgumentOutOfRangeException para menos de 9 dígitos.
+    Cpf.Format cpf |> ignore

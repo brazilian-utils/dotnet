@@ -42,7 +42,11 @@ let IsValid cpf =
 
 let Format cpf =
     let clearValue = OnlyNumbers cpf
-    StringBuilder(clearValue).Insert(3, ".").Insert(7, ".").Insert(11, "-").ToString()
+    let sb = StringBuilder(clearValue)
+    if sb.Length >= 3 then sb.Insert(3, ".") |> ignore
+    if sb.Length >= 7 then sb.Insert(7, ".") |> ignore
+    if sb.Length >= 11 then sb.Insert(11, "-") |> ignore
+    sb.ToString()
 
 let Generate () =
     let baseCpf = generateRandomNumbers (cpfLength - 2)

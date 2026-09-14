@@ -21,7 +21,7 @@ let internal calculateModulus11 weights (value : int list) =
 
 let internal generateRandomNumbers count =
     let rnd = System.Random()
-    List.init count (fun _ -> rnd.Next(0, 9))
+    List.init count (fun _ -> rnd.Next(0, 10))
 
 let internal hasLength length value =
     List.length value = length

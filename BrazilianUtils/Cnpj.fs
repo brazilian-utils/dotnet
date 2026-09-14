@@ -67,7 +67,12 @@ let IsValid cnpj =
 
 let Format cnpj =
     let clearValue = onlyAlphanumeric cnpj
-    StringBuilder(clearValue).Insert(2, ".").Insert(6, ".").Insert(10, "/").Insert(15, "-").ToString()
+    let sb = StringBuilder(clearValue)
+    if sb.Length >= 2 then sb.Insert(2, ".") |> ignore
+    if sb.Length >= 6 then sb.Insert(6, ".") |> ignore
+    if sb.Length >= 10 then sb.Insert(10, "/") |> ignore
+    if sb.Length >= 15 then sb.Insert(15, "-") |> ignore
+    sb.ToString()
 
 let Generate () =
     let baseCnpj = generateRandomNumbers (cnpjLength - 2)

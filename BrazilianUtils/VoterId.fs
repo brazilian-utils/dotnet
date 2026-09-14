@@ -164,8 +164,17 @@ let generate (federativeUnion: string) : string option =
 let formatVoterId (voterId: string) : string option =
     if not (isValid voterId) then
         None
+    elif voterId.Length = 13 then
+        // Caso especial SP/MG: 8 dígitos sequenciais + 1 dígito extra + UF (2) + DVs (2)
+        sprintf "%s %s %s %s %s"
+            voterId.[..3]
+            voterId.[4..7]
+            voterId.[8..8]
+            voterId.[9..10]
+            voterId.[11..12]
+        |> Some
     else
-        sprintf "%s %s %s %s" 
+        sprintf "%s %s %s %s"
             voterId.[..3]
             voterId.[4..7]
             voterId.[8..9]

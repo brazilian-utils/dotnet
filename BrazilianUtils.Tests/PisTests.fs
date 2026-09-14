@@ -39,6 +39,14 @@ let ``test generate produces valid PIS`` () =
         Assert.True(isValid pis)
 
 [<Fact>]
+let ``test generate does not always start with zero`` () =
+    // Regressão: random.Next(0, 1000000000).PadLeft(10, '0') nunca alcançava 10 dígitos,
+    // então o primeiro dígito era sempre '0'.
+    [ 1..200 ]
+    |> List.exists (fun _ -> (generate()).[0] <> '0')
+    |> Assert.True
+
+[<Fact>]
 let ``test remove symbols removes dots dashes and slashes`` () =
     Assert.Equal("00000000000", removeSymbols "00000000000")
     Assert.Equal("17033259504", removeSymbols "170.33259.50-4")

@@ -84,6 +84,12 @@ let ``test generate voter id foreigner`` () =
     | None -> Assert.True(false, "Failed to generate voter ID for ZZ")
 
 [<Fact>]
+let ``test format voter id with 13 digits keeps all digits (SP or MG)`` () =
+    // Regressão: formatVoterId sempre fatiava para 12 dígitos, descartando o último
+    // dígito verificador dos títulos de 13 dígitos (SP/MG).
+    Assert.Equal(Some "3244 5678 0 01 67", formatVoterId "3244567800167")
+
+[<Fact>]
 let ``test generate voter id invalid UF`` () =
     // test if UF is not valid
     let voterId = generate "XX"
