@@ -10,37 +10,42 @@ open BrazilianUtils.LicensePlate
 [<Fact>]
 let ``convertToMercosul should convert valid old format to Mercosul`` () =
     let result = convertToMercosul "ABC1234"
-    Assert.Equal(Some "ABC1C34", result)
+    Assert.Equal("ABC1C34", result)
 
 [<Fact>]
 let ``convertToMercosul should handle lowercase input`` () =
     let result = convertToMercosul "abc1234"
-    Assert.Equal(Some "ABC1C34", result)
+    Assert.Equal("ABC1C34", result)
 
 [<Fact>]
-let ``convertToMercosul should return None for invalid format`` () =
+let ``convertToMercosul should accept the hyphen mask`` () =
+    let result = convertToMercosul "ABC-1234"
+    Assert.Equal("ABC1C34", result)
+
+[<Fact>]
+let ``convertToMercosul should return empty string for invalid format`` () =
     let result = convertToMercosul "ABC123"
-    Assert.Equal(None, result)
+    Assert.Equal("", result)
 
 [<Fact>]
-let ``convertToMercosul should return None for Mercosul format input`` () =
+let ``convertToMercosul should return empty string for Mercosul format input`` () =
     let result = convertToMercosul "ABC1D34"
-    Assert.Equal(None, result)
+    Assert.Equal("", result)
 
 [<Fact>]
-let ``convertToMercosul should return None for empty string`` () =
+let ``convertToMercosul should return empty string for empty string`` () =
     let result = convertToMercosul ""
-    Assert.Equal(None, result)
+    Assert.Equal("", result)
 
 [<Fact>]
 let ``convertToMercosul should convert digit 2 to C`` () =
     let result = convertToMercosul "ABC1234"
-    Assert.Equal(Some "ABC1C34", result)
+    Assert.Equal("ABC1C34", result)
 
 [<Fact>]
 let ``convertToMercosul should convert digit 5 to F`` () =
     let result = convertToMercosul "ABC4567"
-    Assert.Equal(Some "ABC4F67", result)
+    Assert.Equal("ABC4F67", result)
 
 // =============================
 // FORMAT LICENSE PLATE TESTS
@@ -140,53 +145,56 @@ let ``getFormat should return None for empty string`` () =
     Assert.Equal(None, result)
 
 // =============================
+// PARSE TESTS
+// =============================
+
+[<Fact>]
+let ``parse should remove hyphen mask and uppercase`` () =
+    Assert.Equal("ABC1234", parse "abc-1234")
+
+[<Fact>]
+let ``parse should uppercase Mercosul plate`` () =
+    Assert.Equal("ABC1D23", parse "abc1d23")
+
+[<Fact>]
+let ``parse should return empty string for empty string`` () =
+    Assert.Equal("", parse "")
+
+[<Fact>]
+let ``parse should cap length to 7 characters`` () =
+    Assert.Equal("ABC1234", parse "abc123456")
+
+// =============================
 // IS VALID TESTS
 // =============================
 
 [<Fact>]
-let ``isValid should validate old format when plateType is old_format`` () =
-    let result = isValid "ABC1234" (Some "old_format")
-    Assert.True(result)
+let ``isValid should validate old format plates`` () =
+    Assert.True(isValid "ABC1234")
 
 [<Fact>]
-let ``isValid should reject Mercosul when plateType is old_format`` () =
-    let result = isValid "ABC1D34" (Some "old_format")
-    Assert.False(result)
+let ``isValid should validate Mercosul plates`` () =
+    Assert.True(isValid "ABC1D34")
 
 [<Fact>]
-let ``isValid should validate Mercosul when plateType is mercosul`` () =
-    let result = isValid "ABC1D34" (Some "mercosul")
-    Assert.True(result)
-
-[<Fact>]
-let ``isValid should reject old format when plateType is mercosul`` () =
-    let result = isValid "ABC1234" (Some "mercosul")
-    Assert.False(result)
-
-[<Fact>]
-let ``isValid should validate both formats when plateType is None`` () =
-    Assert.True(isValid "ABC1234" None)
-    Assert.True(isValid "ABC1D34" None)
-
-[<Fact>]
-let ``isValid should reject invalid format when plateType is None`` () =
-    let result = isValid "ABCD123" None
+let ``isValid should reject invalid format`` () =
+    let result = isValid "ABCD123"
     Assert.False(result)
 
 [<Fact>]
 let ``isValid should handle lowercase input`` () =
-    Assert.True(isValid "abc1234" None)
-    Assert.True(isValid "abc1d34" (Some "mercosul"))
+    Assert.True(isValid "abc1234")
+    Assert.True(isValid "abc1d34")
 
 [<Fact>]
 let ``isValid should reject empty string`` () =
-    let result = isValid "" None
+    let result = isValid ""
     Assert.False(result)
 
 [<Fact>]
-let ``isValid should reject string with special characters`` () =
-    let result = isValid "ABC-1234" None
-    Assert.False(result)
+let ``isValid should tolerate the hyphen mask`` () =
+    let result = isValid "ABC-1234"
+    Assert.True(result)
 
 // =============================
 // GENERATE TESTS
@@ -196,36 +204,36 @@ let ``isValid should reject string with special characters`` () =
 let ``generate should return Mercosul format by default`` () =
     let result = generate None
     match result with
-    | Some plate -> 
+    | Some plate ->
         Assert.Equal(7, plate.Length)
-        Assert.True(isValid plate (Some "mercosul"))
+        Assert.True(isValid plate)
     | None -> Assert.True(false, "Expected Some value")
 
 [<Fact>]
 let ``generate should return Mercosul format when specified`` () =
     let result = generate (Some "LLLNLNN")
     match result with
-    | Some plate -> 
+    | Some plate ->
         Assert.Equal(7, plate.Length)
-        Assert.True(isValid plate (Some "mercosul"))
+        Assert.True(isValid plate)
     | None -> Assert.True(false, "Expected Some value")
 
 [<Fact>]
 let ``generate should return old format when specified`` () =
     let result = generate (Some "LLLNNNN")
     match result with
-    | Some plate -> 
+    | Some plate ->
         Assert.Equal(7, plate.Length)
-        Assert.True(isValid plate (Some "old_format"))
+        Assert.True(isValid plate)
     | None -> Assert.True(false, "Expected Some value")
 
 [<Fact>]
 let ``generate should handle lowercase format specification`` () =
     let result = generate (Some "lllnnnn")
     match result with
-    | Some plate -> 
+    | Some plate ->
         Assert.Equal(7, plate.Length)
-        Assert.True(isValid plate (Some "old_format"))
+        Assert.True(isValid plate)
     | None -> Assert.True(false, "Expected Some value")
 
 [<Fact>]
@@ -242,7 +250,7 @@ let ``generate should return None for wrong pattern length`` () =
 let ``generate should produce valid uppercase letters`` () =
     let result = generate (Some "LLLNNNN")
     match result with
-    | Some plate -> 
+    | Some plate ->
         let letters = plate.Substring(0, 3)
         Assert.True(letters |> Seq.forall (fun c -> c >= 'A' && c <= 'Z'))
     | None -> Assert.True(false, "Expected Some value")
@@ -251,7 +259,7 @@ let ``generate should produce valid uppercase letters`` () =
 let ``generate should produce valid digits`` () =
     let result = generate (Some "LLLNNNN")
     match result with
-    | Some plate -> 
+    | Some plate ->
         let digits = plate.Substring(3, 4)
         Assert.True(digits |> Seq.forall (fun c -> c >= '0' && c <= '9'))
     | None -> Assert.True(false, "Expected Some value")
@@ -264,7 +272,7 @@ let ``generate should produce valid digits`` () =
 let ``should handle license plates with leading/trailing whitespace`` () =
     let result1 = formatLicensePlate " ABC1234 "
     let result2 = formatLicensePlate " ABC1D34 "
-    // The validation functions trim, so whitespace is handled
+    // As funções de validação removem espaços das pontas, então isso é tratado
     Assert.Equal(Some " AB-C1234 ", result1)
     Assert.Equal(Some " ABC1D34 ", result2)
 
@@ -274,18 +282,18 @@ let ``should handle license plates with leading/trailing whitespace`` () =
 [<InlineData("ABCD234")>]
 [<InlineData("123ABCD")>]
 let ``should reject malformed plates`` (plate: string) =
-    Assert.False(isValid plate None)
+    Assert.False(isValid plate)
 
 [<Theory>]
 [<InlineData("ABC1234")>]
 [<InlineData("XYZ9876")>]
 [<InlineData("DEF0001")>]
 let ``valid old format plates should be recognized`` (plate: string) =
-    Assert.True(isValid plate (Some "old_format"))
+    Assert.True(isValid plate)
 
 [<Theory>]
 [<InlineData("ABC1A23")>]
 [<InlineData("XYZ9Z87")>]
 [<InlineData("DEF0B01")>]
 let ``valid Mercosul plates should be recognized`` (plate: string) =
-    Assert.True(isValid plate (Some "mercosul"))
+    Assert.True(isValid plate)

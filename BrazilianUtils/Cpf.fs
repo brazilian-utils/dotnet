@@ -48,6 +48,21 @@ let Format cpf =
     if sb.Length >= 11 then sb.Insert(11, "-") |> ignore
     sb.ToString()
 
+/// Remove os símbolos de formatação (mantém o restante).
+///
+/// Examples:
+///     RemoveSymbols "831.595.621-31" = "83159562131"
+let RemoveSymbols (cpf: string) : string =
+    cpf.Replace(".", "").Replace("-", "")
+
+/// Remove a formatação do CPF e mantém apenas dígitos, limitado a 11 dígitos.
+///
+/// Examples:
+///     Parse "943.895.751-04" = "94389575104"
+let Parse (value: string) : string =
+    let apenasDigitos = OnlyNumbers value
+    if apenasDigitos.Length > 11 then apenasDigitos.Substring(0, 11) else apenasDigitos
+
 let Generate () =
     let baseCpf = generateRandomNumbers (cpfLength - 2)
     let firstCheckDigit = calculateDigit firstCheckDigitWeights baseCpf

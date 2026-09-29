@@ -208,6 +208,14 @@ let formatLegalProcess (legalProcessId: string) : string option =
     else
         None
 
+/// Removes legal process formatting and keeps only digits, capped to 20 digits.
+///
+/// Examples:
+///     parse "0002080-25.2012.5.15.0049" = "00020802520125150049"
+let parse (value: string) : string =
+    let apenasDigitos = Helpers.OnlyNumbers value
+    if apenasDigitos.Length > 20 then apenasDigitos.Substring(0, 20) else apenasDigitos
+
 // OPERATIONS
 // ==========
 
@@ -262,21 +270,29 @@ let isValid (legalProcessId: string) : bool =
     with
     | _ -> false
 
+/// Opções para a geração de um número de processo jurídico aleatório.
+type GenerateLegalProcessOptions =
+    { Year: int option
+      Court: int option }
+
 /// Generate a random legal process ID number.
 ///
 /// Args:
-///     year: The year for the legal process ID (default is the current year).
-///           The year should not be in the past
-///     orgao: The organization code (1-9) for the legal process ID (default is random).
+///     options.Year: The year for the legal process ID (default is the current year).
+///                   The year should not be in the past.
+///     options.Court: The organization/segment code (1-9, "J") for the legal process ID
+///                    (default is random).
 ///
 /// Examples:
-///     generate (Some 2023) (Some 5) = Some "51659517020235080562"
-///     generate None None = Some "88031888120233030000"
-///     generate (Some 2022) (Some 10) = None
-let generate (year: int option) (orgao: int option) : string option =
+///     generate (Some { Year = Some 2023; Court = Some 5 }) = Some "51659517020235080562"
+///     generate None = Some "88031888120233030000"
+///     generate (Some { Year = Some 2022; Court = Some 10 }) = None
+let generate (options: GenerateLegalProcessOptions option) : string option =
     try
         let random = Random()
         let currentYear = DateTime.Now.Year
+        let year = options |> Option.bind (fun o -> o.Year)
+        let orgao = options |> Option.bind (fun o -> o.Court)
         let selectedYear = defaultArg year currentYear
         let selectedOrgao = defaultArg orgao (random.Next(1, 10))
         

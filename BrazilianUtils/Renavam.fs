@@ -63,3 +63,15 @@ let isValidRenavam (renavam: string) : bool =
         let expectedDv = calculateRenavamDv renavam
         let actualDv = int renavam.[10] - int '0'
         expectedDv = actualDv
+
+/// Gera um RENAVAM aleatório e válido (11 dígitos, sem formatação),
+/// construído para satisfazer `isValidRenavam` por construção.
+let Generate () : string =
+    let random = Random()
+    let rec gerarBase () =
+        let baseDigitos = List.init 10 (fun _ -> random.Next(0, 10))
+        if baseDigitos |> List.distinct |> List.length = 1 then gerarBase () else baseDigitos
+
+    let baseTexto = gerarBase () |> List.map string |> String.concat ""
+    let dv = calculateRenavamDv (baseTexto + "0")
+    baseTexto + string dv

@@ -3,164 +3,209 @@ module BrazilianUtils.Currency
 open System
 open System.Globalization
 
-// --- formatCurrency (replace original implementation) ---
-let formatCurrency (value: decimal) : string option =
-    try
-        // Use pt-BR numeric formatting with thousands separator and 2 decimal places
-        let culture = CultureInfo("pt-BR")
-        let formatted = value.ToString("N2", culture)       // e.g. "-123.236,70" or "123.236,70"
-        // Ensure the exact layout "R$ 123.236,70" or "R$ -123.236,70" (space after R$)
-        let result =
-            if formatted.StartsWith "-" then
-                // remove leading '-' and prefix with "R$ -"
-                let withoutSign = formatted.Substring(1)
-                sprintf "R$ -%s" withoutSign
+// --- analisarValorMonetario ---
+// Interpreta uma string monetária no padrão brasileiro ou americano.
+// Regra: a última "," ou "." seguida de 1 a `precisao` dígitos é o separador
+// decimal; qualquer outra ocorrência de "," ou "." é separador de milhar.
+// Um valor sem nenhum separador é tratado conforme `semSeparadorComoCentavos`.
+let private ehSeparador (c: char) = c = ',' || c = '.'
+
+let private analisarValorMonetario (valorTexto: string) (semSeparadorComoCentavos: bool) (precisao: int) : decimal option =
+    let textoAparado = valorTexto.Trim().Replace("R$", "").Trim()
+    if textoAparado = "" then
+        Some 0M
+    else
+        let negativo = textoAparado.StartsWith("-")
+        let semSinal = if negativo then textoAparado.Substring(1) else textoAparado
+        let indiceUltimoSeparador = semSinal |> Seq.tryFindIndexBack ehSeparador
+        match indiceUltimoSeparador with
+        | None ->
+            let apenasDigitos = semSinal |> String.filter Char.IsDigit
+            if apenasDigitos = "" then
+                None
             else
-                sprintf "R$ %s" formatted
-        Some result
-    with
-    | :? FormatException
-    | :? OverflowException -> None
+                let numero = decimal (Int64.Parse(apenasDigitos))
+                let resultado =
+                    if semSeparadorComoCentavos then numero / (pown 10M precisao) else numero
+                Some (if negativo then -resultado else resultado)
+        | Some indice ->
+            let candidatoDecimal = semSinal.Substring(indice + 1)
+            let ehParteDecimal =
+                candidatoDecimal.Length >= 1
+                && candidatoDecimal.Length <= (max 2 precisao)
+                && candidatoDecimal |> Seq.forall Char.IsDigit
+            if not ehParteDecimal then
+                None
+            else
+                let parteInteira = semSinal.Substring(0, indice) |> String.filter Char.IsDigit
+                let parteInteiraFinal = if parteInteira = "" then "0" else parteInteira
+                let textoNumero = parteInteiraFinal + "." + candidatoDecimal
+                match Decimal.TryParse(textoNumero, NumberStyles.Number, CultureInfo.InvariantCulture) with
+                | true, numero -> Some (if negativo then -numero else numero)
+                | false, _ -> None
 
+let private paraDecimal (valor: obj) : decimal option =
+    match valor with
+    | :? decimal as d -> Some d
+    | :? int as i -> Some (decimal i)
+    | :? int64 as i -> Some (decimal i)
+    | :? float as f when not (Double.IsNaN f) && not (Double.IsInfinity f) -> Some (decimal f)
+    | :? float32 as f -> Some (decimal f)
+    | :? string as s -> analisarValorMonetario s false 2
+    | _ -> None
 
-/// Convert a number to its textual representation in Brazilian Portuguese
-// --- numberToPortuguese (replace scale arrays and adjust thousands rule) ---
-let private numberToPortuguese (n: int64) : string =
-    let units = [| ""; "um"; "dois"; "três"; "quatro"; "cinco"; "seis"; "sete"; "oito"; "nove" |]
-    let teens = [| "dez"; "onze"; "doze"; "treze"; "quatorze"; "quinze"; "dezesseis"; "dezessete"; "dezoito"; "dezenove" |]
-    let tens = [| ""; ""; "vinte"; "trinta"; "quarenta"; "cinquenta"; "sessenta"; "setenta"; "oitenta"; "noventa" |]
-    let hundreds = [| ""; "cento"; "duzentos"; "trezentos"; "quatrocentos"; "quinhentos"; "seiscentos"; "setecentos"; "oitocentos"; "novecentos" |]
+/// Formata um valor (string ou número) como moeda brasileira (BRL), padrão `1.234,56`.
+///
+/// Não adiciona o símbolo "R$"; para entrada inválida (não numérica/não finita)
+/// retorna uma string vazia.
+///
+/// Examples:
+///     Format 1000.01M = "1.000,01"
+///     Format "R$ 1.234,56" = "1.234,56"
+let Format (value: obj) : string =
+    match paraDecimal value with
+    | None -> ""
+    | Some numero ->
+        try
+            let cultura = CultureInfo("pt-BR")
+            numero.ToString("N2", cultura)
+        with _ -> ""
 
-    let rec convertBelow1000 (n: int) : string =
+/// Interpreta uma string em formato de moeda brasileira e devolve o número correspondente.
+///
+/// Um valor sem separador decimal é interpretado como centavos (dividido por 100).
+///
+/// Examples:
+///     Parse "R$ 1.234,56" = 1234.56
+///     Parse "1234" = 12.34
+let Parse (value: string) : float =
+    match analisarValorMonetario value true 2 with
+    | Some numero -> float numero
+    | None -> 0.0
+
+/// Converte um número para sua representação textual em português brasileiro.
+let private numeroParaPortugues (n: int64) : string =
+    let unidades = [| ""; "um"; "dois"; "três"; "quatro"; "cinco"; "seis"; "sete"; "oito"; "nove" |]
+    let dezenasEspeciais = [| "dez"; "onze"; "doze"; "treze"; "quatorze"; "quinze"; "dezesseis"; "dezessete"; "dezoito"; "dezenove" |]
+    let dezenas = [| ""; ""; "vinte"; "trinta"; "quarenta"; "cinquenta"; "sessenta"; "setenta"; "oitenta"; "noventa" |]
+    let centenas = [| ""; "cento"; "duzentos"; "trezentos"; "quatrocentos"; "quinhentos"; "seiscentos"; "setecentos"; "oitocentos"; "novecentos" |]
+
+    let rec converterAbaixoDeMil (n: int) : string =
         if n = 0 then ""
         elif n = 100 then "cem"
-        elif n < 10 then units.[n]
-        elif n < 20 then teens.[n - 10]
+        elif n < 10 then unidades.[n]
+        elif n < 20 then dezenasEspeciais.[n - 10]
         elif n < 100 then
-            let ten = n / 10
-            let unit = n % 10
-            if unit = 0 then tens.[ten]
-            else sprintf "%s e %s" tens.[ten] units.[unit]
+            let dezena = n / 10
+            let unidade = n % 10
+            if unidade = 0 then dezenas.[dezena]
+            else sprintf "%s e %s" dezenas.[dezena] unidades.[unidade]
         else
-            let hundred = n / 100
-            let rest = n % 100
-            if rest = 0 then hundreds.[hundred]
-            else sprintf "%s e %s" hundreds.[hundred] (convertBelow1000 rest)
+            let centena = n / 100
+            let resto = n % 100
+            if resto = 0 then centenas.[centena]
+            else sprintf "%s e %s" centenas.[centena] (converterAbaixoDeMil resto)
 
-    let rec convert (n: int64) (scale: int) : string =
+    let rec converter (n: int64) (escala: int) : string =
         if n = 0L then ""
         else
-            // extended to include quatrilhão / quatrilhões at index 5
-            let scaleNames = [| ""; "mil"; "milhão"; "bilhão"; "trilhão"; "quatrilhão" |]
-            let scalePlurals = [| ""; "mil"; "milhões"; "bilhões"; "trilhões"; "quatrilhões" |]
-            let divisor = pown 1000L scale
-            let quotient = n / divisor
-            let remainder = n % divisor
+            let nomesEscala = [| ""; "mil"; "milhão"; "bilhão"; "trilhão"; "quatrilhão" |]
+            let nomesEscalaPlural = [| ""; "mil"; "milhões"; "bilhões"; "trilhões"; "quatrilhões" |]
+            let divisor = pown 1000L escala
+            let quociente = n / divisor
+            let resto = n % divisor
 
-            if quotient = 0L then convert n (scale - 1)
+            if quociente = 0L then converter n (escala - 1)
             else
-                let currentPart = int (quotient % 1000L)
-                let higherParts = quotient / 1000L
+                let parteAtual = int (quociente % 1000L)
+                let partesSuperiores = quociente / 1000L
 
-                // Special rule: for thousands group (scale = 1) and currentPart = 1,
-                // Portuguese uses "mil" (not "um mil")
-                let partText =
-                    if scale = 1 && currentPart = 1 then "" // omit "um", scale name will be " mil"
-                    else if currentPart = 0 then ""
-                    else convertBelow1000 currentPart
+                let textoParte =
+                    if escala = 1 && parteAtual = 1 then ""
+                    elif parteAtual = 0 then ""
+                    else converterAbaixoDeMil parteAtual
 
-                let scaleName =
-                    if scale = 0 then ""
-                    elif scale = 1 then " mil"
-                    elif currentPart = 1 then sprintf " %s" scaleNames.[scale]
-                    else sprintf " %s" scalePlurals.[scale]
+                let nomeEscala =
+                    if escala = 0 then ""
+                    elif escala = 1 then " mil"
+                    elif parteAtual = 1 then sprintf " %s" nomesEscala.[escala]
+                    else sprintf " %s" nomesEscalaPlural.[escala]
 
-                let currentText =
-                    if String.IsNullOrEmpty partText then scaleName.TrimStart() |> fun s -> if String.IsNullOrEmpty s then "" else s
-                    else partText + scaleName
+                let textoAtual =
+                    if String.IsNullOrEmpty textoParte then nomeEscala.TrimStart()
+                    else textoParte + nomeEscala
 
-                let remainderText = convert remainder (scale - 1)
+                let textoResto = converter resto (escala - 1)
 
-                let higherText =
-                    if higherParts > 0L then convert (higherParts * 1000L) scale
+                let textoSuperior =
+                    if partesSuperiores > 0L then converter (partesSuperiores * 1000L) escala
                     else ""
 
-                let connector =
-                    if not (String.IsNullOrEmpty remainderText) && remainder < 100L && remainder > 0L then " e "
-                    elif not (String.IsNullOrEmpty remainderText) then ", "
+                let conector =
+                    if not (String.IsNullOrEmpty textoResto) && resto < 100L && resto > 0L then " e "
+                    elif not (String.IsNullOrEmpty textoResto) then " "
                     else ""
 
-                if String.IsNullOrEmpty higherText then
-                    (if String.IsNullOrEmpty currentText then remainderText else currentText + connector + remainderText)
+                if String.IsNullOrEmpty textoSuperior then
+                    (if String.IsNullOrEmpty textoAtual then textoResto else textoAtual + conector + textoResto)
                 else
-                    higherText + ", " + currentText + connector + remainderText
+                    textoSuperior + " " + textoAtual + conector + textoResto
 
     if n = 0L then "zero"
     else
-        // Determine maximum scale
-        let mutable maxScale = 0
+        let mutable escalaMaxima = 0
         let mutable temp = n
         while temp >= 1000L do
             temp <- temp / 1000L
-            maxScale <- maxScale + 1
+            escalaMaxima <- escalaMaxima + 1
+        converter n escalaMaxima
 
-        convert n maxScale
-
-/// Convert a monetary value in Brazilian Reais to textual representation.
+/// Converte um valor monetário em Reais para sua representação por extenso, em
+/// português brasileiro, minúsculo e sem vírgulas entre os grupos.
 ///
-/// Note:
-///     - Values are rounded down to 2 decimal places
-///     - Maximum supported value is 1 quadrillion reais
-///     - Negative values are prefixed with "Menos"
+/// - O valor é truncado (não arredondado) em 2 casas decimais.
+/// - Retorna uma string vazia para entrada inválida ou acima de 999 trilhões de reais.
 ///
 /// Examples:
-///     convertRealToText 1523.45M = Some "Mil, quinhentos e vinte e três reais e quarenta e cinco centavos"
-///     convertRealToText 1.00M = Some "Um real"
-///     convertRealToText 0.50M = Some "Cinquenta centavos"
-///     convertRealToText 0.00M = Some "Zero reais"
-let convertRealToText (amount: decimal) : string option =
+///     ConvertToWords 1523.45M = "mil quinhentos e vinte e três reais e quarenta e cinco centavos"
+///     ConvertToWords 1.00M = "um real"
+///     ConvertToWords 0.50M = "cinquenta centavos"
+///     ConvertToWords 0.00M = "zero reais"
+let ConvertToWords (amount: decimal) : string =
     try
-        // Round down to 2 decimal places
-        let roundedAmount = Math.Floor(amount * 100M) / 100M
-        
-        if roundedAmount <> roundedAmount then None // NaN check
-        elif abs roundedAmount > 1000000000000000.00M then None // 1 quadrillion
+        let valorTruncado = Math.Floor(amount * 100M) / 100M
+
+        if valorTruncado <> valorTruncado then ""
+        elif abs valorTruncado > 999000000000000.00M then ""
         else
-            let negative = roundedAmount < 0M
-            let absAmount = abs roundedAmount
-            
-            let reais = int64 (Math.Floor(absAmount))
-            let centavos = int ((absAmount - decimal reais) * 100M)
-            
-            let parts = ResizeArray<string>()
-            
+            let negativo = valorTruncado < 0M
+            let valorAbsoluto = abs valorTruncado
+
+            let reais = int64 (Math.Floor(valorAbsoluto))
+            let centavos = int ((valorAbsoluto - decimal reais) * 100M)
+
+            let partes = ResizeArray<string>()
+
             if reais > 0L then
-                let reaisText = numberToPortuguese reais
-                let currencyText = if reais = 1L then "real" else "reais"
-                let connector = if reaisText.EndsWith("lhão") || reaisText.EndsWith("lhões") then "de " else ""
-                parts.Add(sprintf "%s %s%s" reaisText connector currencyText)
-            
+                let textoReais = numeroParaPortugues reais
+                let textoMoeda = if reais = 1L then "real" else "reais"
+                let conector = if textoReais.EndsWith("lhão") || textoReais.EndsWith("lhões") then "de " else ""
+                partes.Add(sprintf "%s %s%s" textoReais conector textoMoeda)
+
             if centavos > 0 then
-                let centavosText = numberToPortuguese (int64 centavos)
-                let centavoWord = if centavos = 1 then "centavo" else "centavos"
+                let textoCentavos = numeroParaPortugues (int64 centavos)
+                let palavraCentavo = if centavos = 1 then "centavo" else "centavos"
                 if reais > 0L then
-                    parts.Add(sprintf "e %s %s" centavosText centavoWord)
+                    partes.Add(sprintf "e %s %s" textoCentavos palavraCentavo)
                 else
-                    parts.Add(sprintf "%s %s" centavosText centavoWord)
-            
+                    partes.Add(sprintf "%s %s" textoCentavos palavraCentavo)
+
             if reais = 0L && centavos = 0 then
-                parts.Add("Zero reais")
-            
-            let result = String.Join(" ", parts)
-            let finalResult = if negative then sprintf "Menos %s" result else result
-            
-            // Capitalize first letter
-            let capitalized = 
-                if String.IsNullOrEmpty finalResult then finalResult
-                else Char.ToUpper(finalResult.[0]).ToString() + finalResult.Substring(1)
-            
-            Some capitalized
+                partes.Add("zero reais")
+
+            let resultado = String.Join(" ", partes)
+            if negativo then sprintf "menos %s" resultado else resultado
     with
     | :? InvalidOperationException
     | :? OverflowException
-    | :? ArgumentException -> None
+    | :? ArgumentException -> ""

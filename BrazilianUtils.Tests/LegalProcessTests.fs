@@ -115,7 +115,7 @@ let ``isValid should return false for exceptions`` () =
 
 [<Fact>]
 let ``generate should return a valid legal process ID with no args`` () =
-    let result = generate None None
+    let result = generate None
     Assert.True(result.IsSome)
     let processId = result.Value
     Assert.Equal(20, processId.Length)
@@ -125,7 +125,7 @@ let ``generate should return a valid legal process ID with no args`` () =
 [<Fact>]
 let ``generate should return a valid legal process ID for specific year and orgao`` () =
     let currentYear = DateTime.Now.Year
-    let result = generate (Some currentYear) (Some 5) // Orgao5
+    let result = generate (Some { Year = Some currentYear; Court = Some 5 }) // Orgao5
     Assert.True(result.IsSome)
     let processId = result.Value
 
@@ -139,17 +139,17 @@ let ``generate should return a valid legal process ID for specific year and orga
 [<Fact>]
 let ``generate should return None for a past year`` () =
     let pastYear = DateTime.Now.Year - 1
-    let result = generate (Some pastYear) None
+    let result = generate (Some { Year = Some pastYear; Court = None })
     Assert.True(result.IsNone)
 
 [<Fact>]
 let ``generate should return None for an invalid orgao (0)`` () =
-    let result = generate None (Some 0)
+    let result = generate (Some { Year = None; Court = Some 0 })
     Assert.True(result.IsNone)
 
 [<Fact>]
 let ``generate should return None for an invalid orgao (10)`` () =
-    let result = generate None (Some 10)
+    let result = generate (Some { Year = None; Court = Some 10 })
     Assert.True(result.IsNone)
 
 [<Fact>]
@@ -162,7 +162,7 @@ let ``generate should create valid IDs for all valid orgaos`` () =
         let mutable attempts = 0
         while not found && attempts < 10 do
             attempts <- attempts + 1
-            let result = generate (Some currentYear) (Some orgao)
+            let result = generate (Some { Year = Some currentYear; Court = Some orgao })
             if result.IsSome then
                 let processId = result.Value
                 if isValid processId then

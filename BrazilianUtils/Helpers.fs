@@ -35,3 +35,13 @@ let internal stringToIntList value =
     |> OnlyNumbers
     |> Seq.map charToInt
     |> Seq.toList
+
+/// Lê o conteúdo textual de um recurso incorporado (embedded resource) pelo
+/// seu nome lógico (`LogicalName` no .fsproj).
+let internal lerRecursoEmbutido (nomeLogico: string) : string =
+    let assembly = System.Reflection.Assembly.GetExecutingAssembly()
+    use stream = assembly.GetManifestResourceStream(nomeLogico)
+    if isNull stream then
+        failwithf "Recurso incorporado não encontrado: %s" nomeLogico
+    use leitor = new System.IO.StreamReader(stream)
+    leitor.ReadToEnd()

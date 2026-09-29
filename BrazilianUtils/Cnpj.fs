@@ -82,6 +82,21 @@ let Generate () =
     |> List.map (fun x -> x.ToString())
     |> String.concat ""
 
+/// Remove os símbolos de formatação (mantém o restante).
+///
+/// Examples:
+///     RemoveSymbols "10.799.163/9892-71" = "10799163989271"
+let RemoveSymbols (cnpj: string) : string =
+    cnpj.Replace(".", "").Replace("/", "").Replace("-", "")
+
+/// Remove a formatação do CNPJ e mantém apenas dígitos, limitado a 14 caracteres.
+///
+/// Examples:
+///     Parse "46.843.485/0001-86" = "46843485000186"
+let Parse (value: string) : string =
+    let apenasDigitos = OnlyNumbers value
+    if apenasDigitos.Length > 14 then apenasDigitos.Substring(0, 14) else apenasDigitos
+
 let GenerateAlphanumeric () =
     let rnd = Random()
     let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"

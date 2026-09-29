@@ -1,5 +1,6 @@
 module BrazilianUtils.Boleto
 
+open System
 open Helpers
 
 type private PartialPosition(startPos: int, endPos: int, checkDigitPos: int) =
@@ -87,3 +88,67 @@ let IsValid value =
     | x when x = digitableLineLength -> clearValue |> validateDigitableLine
     | x when x = boletoLength -> clearValue |> validateBoleto
     | _ -> false
+
+let private paraTexto (value: obj) : string =
+    match value with
+    | :? string as s -> s
+    | :? int as i -> string i
+    | :? int64 as i -> string i
+    | _ -> ""
+
+/// Remove a formatação do boleto e mantém apenas dígitos, limitado a 47
+/// dígitos (48 para um boleto de arrecadação, reconhecido pelo primeiro
+/// dígito "8").
+let Parse (value: obj) : string =
+    let apenasDigitos = OnlyNumbers (paraTexto value)
+    let limite = if apenasDigitos.Length > 0 && apenasDigitos.[0] = '8' then 48 else 47
+    if apenasDigitos.Length > limite then apenasDigitos.Substring(0, limite) else apenasDigitos
+
+/// Formata um boleto com sua máscara impressa. Não valida (use `IsValid`).
+///
+/// - Linha digitável de cobrança bancária (47 dígitos): agrupada como
+///   `00000.00000 00000.000000 00000.000000 0 00000000000000`.
+/// - Linha digitável de arrecadação (48 dígitos, começa com "8"): quatro
+///   blocos de 11 dígitos, cada um seguido de seu dígito verificador.
+let Format (value: obj) : string =
+    let digitos = Parse value
+    if digitos = "" then
+        ""
+    else
+        let mutable resultado = digitos
+        let aplicar posicoes separadores =
+            List.iter2
+                (fun posicao separador ->
+                    if resultado.Length > posicao then
+                        resultado <- resultado.Substring(0, posicao) + separador + resultado.Substring(posicao))
+                posicoes
+                separadores
+        if digitos.[0] = '8' then
+            aplicar [ 11; 13; 25; 27; 39; 41; 53 ] [ "-"; " "; "-"; " "; "-"; " "; "-" ]
+        else
+            aplicar [ 5; 11; 17; 24; 30; 37; 39 ] [ "."; " "; "."; " "; "."; " "; " " ]
+        resultado
+
+/// Gera uma linha digitável de cobrança bancária (47 dígitos) aleatória e
+/// válida, construída para satisfazer `IsValid` por construção (não apenas
+/// por tentativa e erro).
+let Generate () : string =
+    let random = Random()
+    let gerarDigitos n = List.init n (fun _ -> random.Next(0, 10))
+    let banco = gerarDigitos 3
+    let moeda = [ 9 ]
+    let campo1Parte = gerarDigitos 5
+    let campo2 = gerarDigitos 10
+    let campo3 = gerarDigitos 10
+    let fatorVencimento = [ 0; 0; 0; 0 ] // sem fator de vencimento (valor < 1000)
+    let valor = gerarDigitos 10
+
+    let baseParaDac = banco @ moeda @ fatorVencimento @ valor @ campo1Parte @ campo2 @ campo3
+    let dac = calculateBoletoDigit baseParaDac
+    let dv1 = calculatePartialDigit (banco @ moeda @ campo1Parte)
+    let dv2 = calculatePartialDigit campo2
+    let dv3 = calculatePartialDigit campo3
+
+    banco @ moeda @ campo1Parte @ [ dv1 ] @ campo2 @ [ dv2 ] @ campo3 @ [ dv3 ] @ [ dac ] @ fatorVencimento @ valor
+    |> List.map string
+    |> String.concat ""

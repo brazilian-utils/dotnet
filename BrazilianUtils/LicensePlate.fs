@@ -3,78 +3,89 @@ module BrazilianUtils.LicensePlate
 open System
 open System.Text.RegularExpressions
 
-// PRIVATE VALIDATION FUNCTIONS
+// FUNÇÕES PRIVADAS DE VALIDAÇÃO
 // =============================
 
-/// Checks whether a string matches the old format of Brazilian license plate.
-/// Pattern: 'LLLNNNN'
+/// Verifica se uma string corresponde ao formato antigo de placa brasileira.
+/// Padrão: 'LLLNNNN'
 let private isValidOldFormat (licensePlate: string) : bool =
     if String.IsNullOrEmpty(licensePlate) then
         false
     else
-        let trimmed = licensePlate.Trim()
-        let pattern = @"^[A-Za-z]{3}[0-9]{4}$"
-        Regex.IsMatch(trimmed, pattern)
+        let semEspacos = licensePlate.Trim()
+        let padrao = @"^[A-Za-z]{3}[0-9]{4}$"
+        Regex.IsMatch(semEspacos, padrao)
 
-/// Checks whether a string matches the Mercosul format of Brazilian license plate.
-/// Pattern: 'LLLNLNN'
+/// Verifica se uma string corresponde ao formato Mercosul de placa brasileira.
+/// Padrão: 'LLLNLNN'
 let private isValidMercosul (licensePlate: string) : bool =
     if String.IsNullOrEmpty(licensePlate) then
         false
     else
-        let trimmed = licensePlate.Trim().ToUpper()
-        let pattern = @"^[A-Z]{3}\d[A-Z]\d{2}$"
-        Regex.IsMatch(trimmed, pattern)
+        let maiusculo = licensePlate.Trim().ToUpper()
+        let padrao = @"^[A-Z]{3}\d[A-Z]\d{2}$"
+        Regex.IsMatch(maiusculo, padrao)
 
-// FORMATTING
+/// Remove hífen e espaços internos e converte para maiúsculo, para as
+/// funções que toleram máscara (convertToMercosul e isValid, conforme o contrato).
+let private normalizar (value: string) : string =
+    if isNull value then ""
+    else value.Replace("-", "").Replace(" ", "").Trim().ToUpper()
+
+// FORMATAÇÃO
 // ==========
 
-/// Converts an old pattern license plate (LLLNNNN) to a Mercosul format (LLLNLNN).
+/// Converte uma placa no padrão antigo (LLLNNNN) para o formato Mercosul (LLLNLNN).
+/// Aceita a máscara com hífen. Retorna uma string vazia quando a conversão não é
+/// possível (placa já é Mercosul, é inválida, ou está vazia).
 ///
 /// Examples:
-///     convertToMercosul "ABC4567" = Some "ABC4F67"
-///     convertToMercosul "ABC4*67" = None
-let convertToMercosul (licensePlate: string) : string option =
-    if not (isValidOldFormat licensePlate) then
-        None
+///     convertToMercosul "ABC4567" = "ABC4F67"
+///     convertToMercosul "ABC-1234" = "ABC1C34"
+///     convertToMercosul "ABC4*67" = ""
+let convertToMercosul (licensePlate: string) : string =
+    if isNull licensePlate then
+        ""
     else
-        let digits = licensePlate.ToUpper() |> Seq.toArray
-        // Convert the 5th character (index 4) from digit to letter
-        digits.[4] <- char (int 'A' + (int digits.[4] - int '0'))
-        Some (String(digits))
+        let semTraco = licensePlate.Replace("-", "")
+        if not (isValidOldFormat semTraco) then
+            ""
+        else
+            let letrasEDigitos = semTraco.Trim().ToUpper() |> Seq.toArray
+            // Converte o 5º caractere (índice 4) de dígito para letra
+            letrasEDigitos.[4] <- char (int 'A' + (int letrasEDigitos.[4] - int '0'))
+            String(letrasEDigitos)
 
-/// Formats a license plate into the correct pattern.
-/// This function receives a license plate in any pattern (LLLNNNN or LLLNLNN)
-/// and returns a formatted version.
+/// Formata uma placa no padrão correto.
+/// Recebe uma placa em qualquer padrão (LLLNNNN ou LLLNLNN) e devolve a versão formatada.
 ///
 /// Examples:
-///     formatLicensePlate "ABC1234" = Some "ABC-1234"  // old format (contains a dash)
-///     formatLicensePlate "abc1e34" = Some "ABC1E34"   // mercosul format
+///     formatLicensePlate "ABC1234" = Some "ABC-1234"  // formato antigo (ganha hífen)
+///     formatLicensePlate "abc1e34" = Some "ABC1E34"   // formato Mercosul
 ///     formatLicensePlate "ABC123" = None
 let formatLicensePlate (licensePlate: string) : string option =
-    let upper = licensePlate.ToUpper()
-    
+    let maiusculo = licensePlate.ToUpper()
+
     if isValidOldFormat licensePlate then
-        Some (upper.Substring(0, 3) + "-" + upper.Substring(3))
+        Some (maiusculo.Substring(0, 3) + "-" + maiusculo.Substring(3))
     elif isValidMercosul licensePlate then
-        Some upper
+        Some maiusculo
     else
         None
 
-// OPERATIONS
+// OPERAÇÕES
 // ==========
 
-/// Removes the dash (-) symbol from a license plate string.
+/// Remove o símbolo de hífen (-) de uma placa.
 ///
 /// Examples:
 ///     removeSymbols "ABC-123" = "ABC123"
 ///     removeSymbols "abc123" = "abc123"
-///     removeSymbols "ABCD123" = "ABCD123"
 let removeSymbols (licensePlateNumber: string) : string =
     licensePlateNumber.Replace("-", "")
 
-/// Return the format of a license plate. 'LLLNNNN' for the old pattern and
-/// 'LLLNLNN' for the Mercosul one.
+/// Devolve o formato de uma placa brasileira. 'LLLNNNN' para o padrão antigo e
+/// 'LLLNLNN' para o Mercosul.
 ///
 /// Examples:
 ///     getFormat "abc1234" = Some "LLLNNNN"
@@ -88,26 +99,42 @@ let getFormat (licensePlate: string) : string option =
     else
         None
 
-/// Returns if a Brazilian license plate number is valid.
-/// It does not verify if the plate actually exists.
+/// Retorna se um número de placa brasileira é válido (formato antigo ou Mercosul).
+/// Não verifica se a placa realmente existe.
+///
+/// Tolera a máscara com hífen ou espaço e ignora maiúsculas/minúsculas.
 ///
 /// Args:
-///     licensePlate: The license plate number to be validated.
-///     plateType: "old_format", "mercosul", or None.
-///                If not specified, checks for one or another.
-let isValid (licensePlate: string) (plateType: string option) : bool =
-    match plateType with
-    | Some "old_format" -> isValidOldFormat licensePlate
-    | Some "mercosul" -> isValidMercosul licensePlate
-    | _ -> isValidOldFormat licensePlate || isValidMercosul licensePlate
+///     licensePlate: o número da placa a ser validado.
+let isValid (licensePlate: string) : bool =
+    if String.IsNullOrEmpty licensePlate then
+        false
+    else
+        let normalizado = normalizar licensePlate
+        isValidOldFormat normalizado || isValidMercosul normalizado
 
-/// Generate a valid license plate in the given format. In case no format is
-/// provided, it will return a license plate in the Mercosul format.
+/// Remove a formatação da placa e devolve apenas letras e dígitos maiúsculos,
+/// limitado a 7 caracteres.
+///
+/// Examples:
+///     parse "abc-1234" = "ABC1234"
+///     parse "abc123456" = "ABC1234"
+let parse (value: string) : string =
+    if isNull value then
+        ""
+    else
+        let apenasAlfanumerico =
+            value.ToUpper()
+            |> String.filter Char.IsLetterOrDigit
+        if apenasAlfanumerico.Length > 7 then apenasAlfanumerico.Substring(0, 7) else apenasAlfanumerico
+
+/// Gera uma placa válida no formato informado. Caso nenhum formato seja informado,
+/// devolve uma placa no formato Mercosul.
 ///
 /// Args:
-///     format: The desired format for the license plate.
-///             'LLLNNNN' for the old pattern or 'LLLNLNN' for the
-///             Mercosul one. Default is 'LLLNLNN'
+///     format: o formato desejado para a placa.
+///             'LLLNLNN' para o padrão Mercosul ou 'LLLNNNN' para o antigo.
+///             O padrão é 'LLLNLNN'.
 ///
 /// Examples:
 ///     generate None = "ABC1D23"
@@ -118,11 +145,11 @@ let generate (format: string option) : string option =
     let random = Random()
     let selectedFormat = defaultArg format "LLLNLNN"
     let upperFormat = selectedFormat.ToUpper()
-    
+
     if upperFormat <> "LLLNLNN" && upperFormat <> "LLLNNNN" then
         None
     else
-        let generated = 
+        let generated =
             upperFormat
             |> Seq.map (fun c ->
                 if c = 'L' then
@@ -132,5 +159,5 @@ let generate (format: string option) : string option =
             )
             |> Seq.toArray
             |> String
-        
+
         Some generated

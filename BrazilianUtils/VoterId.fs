@@ -180,3 +180,24 @@ let formatVoterId (voterId: string) : string option =
             voterId.[8..9]
             voterId.[10..11]
         |> Some
+
+let private paraTexto (value: obj) : string =
+    match value with
+    | :? string as s -> s
+    | :? int as i -> string i
+    | :? int64 as i -> string i
+    | _ -> ""
+
+/// Remove a formatação do título de eleitor e mantém apenas dígitos,
+/// limitado a 12 dígitos (13 quando os dígitos de UF são SP ou MG).
+let Parse (value: obj) : string =
+    let apenasDigitos = paraTexto value |> Seq.filter Char.IsDigit |> Seq.toArray |> String
+    let ehSpOuMg =
+        apenasDigitos.Length >= 11
+        && (apenasDigitos.Substring(9, 2) = "01" || apenasDigitos.Substring(9, 2) = "02")
+    let limite = if ehSpOuMg then 13 else 12
+    if apenasDigitos.Length > limite then apenasDigitos.Substring(0, limite) else apenasDigitos
+
+/// Remove os símbolos de formatação (espaço e ponto; mantém o restante).
+let RemoveSymbols (value: string) : string =
+    if isNull value then "" else value.Replace(" ", "").Replace(".", "")

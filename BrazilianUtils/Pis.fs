@@ -50,6 +50,9 @@ let isValid (pis: string) : bool =
         false
     elif not (pis |> Seq.forall Char.IsDigit) then
         false
+    elif pis |> Seq.distinct |> Seq.length = 1 then
+        // Todos os dígitos iguais (ex.: "00000000000") é sempre inválido
+        false
     else
         let calculatedChecksum = checksum (pis.Substring(0, 10))
         let lastDigit = int pis.[10] - int '0'
@@ -83,6 +86,14 @@ let formatPis (pis: string) : string option =
 /// Examples:
 ///     generate() = "12345678909"
 ///     generate() = "98765432100"
+/// Remove a formatação do PIS e mantém apenas dígitos, limitado a 11 dígitos.
+///
+/// Examples:
+///     parse "123.45678.90-1" = "12345678901"
+let parse (value: string) : string =
+    let apenasDigitos = value |> Seq.filter Char.IsDigit |> Seq.toArray |> String
+    if apenasDigitos.Length > 11 then apenasDigitos.Substring(0, 11) else apenasDigitos
+
 let generate () : string =
     let random = Random()
     let baseNumber =

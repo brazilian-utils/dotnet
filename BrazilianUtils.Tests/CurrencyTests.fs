@@ -7,93 +7,133 @@ open BrazilianUtils.Currency
 module CurrencyFormatTests =
 
     [<Fact>]
-    let ``formatCurrency when value is a decimal value`` () =
-        let actual = formatCurrency 123236.70M
-        Assert.Equal<string option>(Some "R$ 123.236,70", actual)
+    let ``Format when value is a decimal value`` () =
+        let actual = Format (box 123236.70M)
+        Assert.Equal<string>("123.236,70", actual)
 
     [<Fact>]
-    let ``formatCurrency when value is a float-like value converted to decimal`` () =
-        let actual = formatCurrency (decimal 123236.70)
-        Assert.Equal<string option>(Some "R$ 123.236,70", actual)
+    let ``Format when value is a float-like value converted to decimal`` () =
+        let actual = Format (box (decimal 123236.70))
+        Assert.Equal<string>("123.236,70", actual)
 
     [<Fact>]
-    let ``formatCurrency when value is negative`` () =
-        let actual = formatCurrency -123236.70M
-        Assert.Equal<string option>(Some "R$ -123.236,70", actual)
+    let ``Format when value is negative`` () =
+        let actual = Format (box -123236.70M)
+        Assert.Equal<string>("-123.236,70", actual)
 
     [<Fact>]
-    let ``formatCurrency when value is zero`` () =
-        let actual = formatCurrency 0.00M
-        Assert.Equal<string option>(Some "R$ 0,00", actual)
+    let ``Format when value is zero`` () =
+        let actual = Format (box 0.00M)
+        Assert.Equal<string>("0,00", actual)
 
     [<Fact>]
-    let ``formatCurrency value decimal replace rounding`` () =
-        let actual = formatCurrency -123236.7676M
-        Assert.Equal<string option>(Some "R$ -123.236,77", actual)
-
-module ConvertRealToTextTests =
-
-    let private assertText expected actual =
-        Assert.Equal<string option>(Some expected, actual)
+    let ``Format value decimal replace rounding`` () =
+        let actual = Format (box -123236.7676M)
+        Assert.Equal<string>("-123.236,77", actual)
 
     [<Fact>]
-    let ``convertRealToText basic cases`` () =
-        assertText "Zero reais" (convertRealToText 0.00M)
-        assertText "Um centavo" (convertRealToText 0.01M)
-        assertText "Cinquenta centavos" (convertRealToText 0.50M)
-        assertText "Um real" (convertRealToText 1.00M)
-        assertText "Menos cinquenta reais e vinte e cinco centavos" (convertRealToText -50.25M)
-        assertText "Mil, quinhentos e vinte e três reais e quarenta e cinco centavos" (convertRealToText 1523.45M)
-        assertText "Um milhão de reais" (convertRealToText 1000000.00M)
-        assertText "Dois milhões de reais" (convertRealToText 2000000.00M)
-        assertText "Um bilhão de reais" (convertRealToText 1000000000.00M)
-        assertText "Dois bilhões de reais" (convertRealToText 2000000000.00M)
-        assertText "Um trilhão de reais" (convertRealToText 1000000000000.00M)
-        assertText "Dois trilhões de reais" (convertRealToText 2000000000000.00M)
-        assertText "Um milhão de reais e quarenta e cinco centavos" (convertRealToText 1000000.45M)
-        assertText "Dois bilhões de reais e noventa e nove centavos" (convertRealToText 2000000000.99M)
-        assertText "Um bilhão, duzentos e trinta e quatro milhões, quinhentos e sessenta e sete mil, oitocentos e noventa reais e cinquenta centavos" (convertRealToText 1234567890.50M)
+    let ``Format accepts a dot-decimal string`` () =
+        let actual = Format (box "1234.56")
+        Assert.Equal<string>("1.234,56", actual)
 
     [<Fact>]
-    let ``convertRealToText almost zero values`` () =
-        assertText "Zero reais" (convertRealToText 0.001M)
-        assertText "Zero reais" (convertRealToText 0.009M)
+    let ``Format accepts an already Brazilian-formatted string`` () =
+        let actual = Format (box "1.234,56")
+        Assert.Equal<string>("1.234,56", actual)
 
     [<Fact>]
-    let ``convertRealToText negative millions`` () =
-        assertText "Menos um milhão de reais" (convertRealToText -1000000.00M)
-        assertText "Menos dois milhões de reais e cinquenta centavos" (convertRealToText -2000000.50M)
+    let ``Format accepts a string with the R$ symbol`` () =
+        let actual = Format (box "R$ 1.234,56")
+        Assert.Equal<string>("1.234,56", actual)
 
     [<Fact>]
-    let ``convertRealToText billions with cents`` () =
-        assertText "Um bilhão de reais e um centavo" (convertRealToText 1000000000.01M)
-        assertText "Um bilhão de reais e noventa e nove centavos" (convertRealToText 1000000000.99M)
+    let ``Format returns empty string for invalid input`` () =
+        let actual = Format (box "not a number")
+        Assert.Equal<string>("", actual)
+
+module ParseCurrencyTests =
+
+    let private arredondar (valor: float) = System.Math.Round(valor, 2)
 
     [<Fact>]
-    let ``convertRealToText very large composed number`` () =
+    let ``Parse with symbol`` () =
+        Assert.Equal<float>(1234.56, arredondar (Parse "R$ 1.234,56"))
+
+    [<Fact>]
+    let ``Parse comma decimal`` () =
+        Assert.Equal<float>(1234.56, arredondar (Parse "1234,56"))
+
+    [<Fact>]
+    let ``Parse digits only is read as cents`` () =
+        Assert.Equal<float>(12.34, arredondar (Parse "1234"))
+
+    [<Fact>]
+    let ``Parse empty string is zero`` () =
+        Assert.Equal<float>(0.0, arredondar (Parse ""))
+
+module ConvertToWordsTests =
+
+    let private assertText (expected: string) (actual: string) =
+        Assert.Equal<string>(expected, actual)
+
+    [<Fact>]
+    let ``ConvertToWords basic cases`` () =
+        assertText "zero reais" (ConvertToWords 0.00M)
+        assertText "um centavo" (ConvertToWords 0.01M)
+        assertText "cinquenta centavos" (ConvertToWords 0.50M)
+        assertText "um real" (ConvertToWords 1.00M)
+        assertText "menos cinquenta reais e vinte e cinco centavos" (ConvertToWords -50.25M)
+        assertText "mil quinhentos e vinte e três reais e quarenta e cinco centavos" (ConvertToWords 1523.45M)
+        assertText "um milhão de reais" (ConvertToWords 1000000.00M)
+        assertText "dois milhões de reais" (ConvertToWords 2000000.00M)
+        assertText "um bilhão de reais" (ConvertToWords 1000000000.00M)
+        assertText "dois bilhões de reais" (ConvertToWords 2000000000.00M)
+        assertText "um trilhão de reais" (ConvertToWords 1000000000000.00M)
+        assertText "dois trilhões de reais" (ConvertToWords 2000000000000.00M)
+        assertText "um milhão de reais e quarenta e cinco centavos" (ConvertToWords 1000000.45M)
+        assertText "dois bilhões de reais e noventa e nove centavos" (ConvertToWords 2000000000.99M)
         assertText
-            "Novecentos e noventa e nove bilhões, novecentos e noventa e nove milhões, novecentos e noventa e nove mil, novecentos e noventa e nove reais e noventa e nove centavos"
-            (convertRealToText 999999999999.99M)
+            "um bilhão duzentos e trinta e quatro milhões quinhentos e sessenta e sete mil oitocentos e noventa reais e cinquenta centavos"
+            (ConvertToWords 1234567890.50M)
 
     [<Fact>]
-    let ``convertRealToText trillions with cents`` () =
-        assertText "Um trilhão de reais e um centavo" (convertRealToText 1000000000000.01M)
-        assertText "Um trilhão de reais e noventa e nove centavos" (convertRealToText 1000000000000.99M)
+    let ``ConvertToWords almost zero values`` () =
+        assertText "zero reais" (ConvertToWords 0.001M)
+        assertText "zero reais" (ConvertToWords 0.009M)
+
+    [<Fact>]
+    let ``ConvertToWords negative millions`` () =
+        assertText "menos um milhão de reais" (ConvertToWords -1000000.00M)
+        assertText "menos dois milhões de reais e cinquenta centavos" (ConvertToWords -2000000.50M)
+
+    [<Fact>]
+    let ``ConvertToWords billions with cents`` () =
+        assertText "um bilhão de reais e um centavo" (ConvertToWords 1000000000.01M)
+        assertText "um bilhão de reais e noventa e nove centavos" (ConvertToWords 1000000000.99M)
+
+    [<Fact>]
+    let ``ConvertToWords very large composed number`` () =
         assertText
-            "Nove trilhões, novecentos e noventa e nove bilhões, novecentos e noventa e nove milhões, novecentos e noventa e nove mil, novecentos e noventa e nove reais e noventa e nove centavos"
-            (convertRealToText 9999999999999.99M)
+            "novecentos e noventa e nove bilhões novecentos e noventa e nove milhões novecentos e noventa e nove mil novecentos e noventa e nove reais e noventa e nove centavos"
+            (ConvertToWords 999999999999.99M)
 
     [<Fact>]
-    let ``convertRealToText one quadrillion`` () =
-        assertText "Um quatrilhão de reais" (convertRealToText 1000000000000000.00M)
+    let ``ConvertToWords trillions with cents`` () =
+        assertText "um trilhão de reais e um centavo" (ConvertToWords 1000000000000.01M)
+        assertText "um trilhão de reais e noventa e nove centavos" (ConvertToWords 1000000000000.99M)
+        assertText
+            "nove trilhões novecentos e noventa e nove bilhões novecentos e noventa e nove milhões novecentos e noventa e nove mil novecentos e noventa e nove reais e noventa e nove centavos"
+            (ConvertToWords 9999999999999.99M)
 
     [<Fact>]
-    let ``convertRealToText edge cases return None`` () =
-        // Out of supported range -> None
-        Assert.Equal< string option >(None, convertRealToText -1000000000000001.00M)
-        Assert.Equal< string option >(None, convertRealToText 1000000000000001.00M)
+    let ``ConvertToWords rejects amounts above 999 trillion reais`` () =
+        // Acima do limite de 999 trilhões de reais o resultado é uma string vazia
+        assertText "" (ConvertToWords 1000000000000000.00M)
 
-        // Decimal.NaN / Infinity are not representable in decimal; we can exercise extreme overflow-like values instead
-        // Use an obviously too-large value that should be rejected by the implementation
+    [<Fact>]
+    let ``ConvertToWords edge cases return empty string`` () =
+        assertText "" (ConvertToWords -1000000000000001.00M)
+        assertText "" (ConvertToWords 1000000000000001.00M)
+
         let tooLarge = 79228162514264337593543950335.00M // ~Decimal.MaxValue-ish literal
-        Assert.Equal<string option>(None, convertRealToText tooLarge)
+        assertText "" (ConvertToWords tooLarge)

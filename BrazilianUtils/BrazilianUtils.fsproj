@@ -9,6 +9,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Helpers.fs" />
+        <Compile Include="Ie.fs" />
+        <Compile Include="Cbo.fs" />
+        <Compile Include="Cnae.fs" />
+        <Compile Include="Ncm.fs" />
+        <Compile Include="Municipality.fs" />
+        <Compile Include="Bank.fs" />
+        <Compile Include="BankAccount.fs" />
+        <Compile Include="Cfop.fs" />
+        <Compile Include="Cst.fs" />
+        <Compile Include="Iban.fs" />
+        <Compile Include="Certidao.fs" />
+        <Compile Include="Passport.fs" />
         <Compile Include="VoterId.fs" />
         <Compile Include="Renavam.fs" />
         <Compile Include="Pis.fs" />
@@ -16,12 +29,47 @@
         <Compile Include="LegalProcess.fs" />
         <Compile Include="Currency.fs" />
         <Compile Include="Cnh.fs" />
-        <Compile Include="Helpers.fs" />
         <Compile Include="Boleto.fs" />
         <Compile Include="Cpf.fs" />
         <Compile Include="Cnpj.fs" />
         <Compile Include="Phone.fs" />
         <Compile Include="Cep.fs" />
+        <Compile Include="Email.fs" />
+        <Compile Include="LegalNature.fs" />
+        <Compile Include="Text.fs" />
+        <Compile Include="NumberWords.fs" />
+        <Compile Include="CreditCard.fs" />
+        <Compile Include="Vin.fs" />
+        <Compile Include="RegistroProfissional.fs" />
+        <Compile Include="Caepf.fs" />
+        <Compile Include="Cno.fs" />
+        <Compile Include="Cei.fs" />
+        <Compile Include="Cns.fs" />
+        <Compile Include="State.fs" />
+        <Compile Include="AreaCode.fs" />
+        <Compile Include="Csosn.fs" />
+        <Compile Include="Date.fs" />
+        <Compile Include="NfeKey.fs" />
+        <Compile Include="PixKey.fs" />
+        <Compile Include="PixPayload.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Data\cbo.json">
+            <LogicalName>cbo.json</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Data\cnae.json">
+            <LogicalName>cnae.json</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Data\ncm.json">
+            <LogicalName>ncm.json</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Data\municipalities.json">
+            <LogicalName>municipalities.json</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Data\cfop.json">
+            <LogicalName>cfop.json</LogicalName>
+        </EmbeddedResource>
     </ItemGroup>
 
 </Project>
